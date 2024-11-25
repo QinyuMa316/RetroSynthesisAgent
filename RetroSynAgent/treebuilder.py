@@ -499,44 +499,40 @@ class Tree:
         self.fathers_set = fathers_set if fathers_set is not None else set()
         self.reaction_line = reaction_line if reaction_line is not None else []
         """
-        path = self.search_pathway(self.root)
+        path = self.search_reaction_pathways(self.root)
         path = self.clean_path(path)
         path = self.remove_supersets(path)
         return path
 
-    def search_pathway(self, node):
-        # Post-order traversal
-        # Termination condition: when the node is a leaf node
+    def search_reaction_pathways(self, node):
+        # Termination condition: if it is a leaf node, return an empty path
         if node.is_leaf:
-            return []
-        # Process leaf nodes
-        # First, merge reaction paths by reaction
+            return [[]]
+
+        # Store the set of paths for each reaction index
         reaction_paths = {}
+
         for child in node.children:
-            paths = self.search_pathway(child)
+            paths = self.search_reaction_pathways(child)  # Recursively retrieve paths from child nodes
             reaction_idx = child.reaction_index
-            # If the reaction index does not exist in the dictionary, or the list is empty, overwrite it
-            if reaction_idx not in reaction_paths or len(reaction_paths[reaction_idx]) == 0:
+
+            # If the reaction index does not exist yet or the current path set is empty, directly overwrite it
+            if reaction_idx not in reaction_paths or reaction_paths[reaction_idx] == [[]]:
                 reaction_paths[reaction_idx] = paths
-            elif len(paths) == 0:
-                continue
-            else:
-                # Merge the current required reactions
-                cur_paths = reaction_paths[reaction_idx]
-                # Empty the current list
-                reaction_paths[reaction_idx] = []
-                # Combine the paths
-                for cur_path in cur_paths:
-                    for child_path in paths:
-                        reaction_paths[reaction_idx].append(cur_path + child_path)
-        # Process intermediate nodes: combine paths from different keys of the reaction_paths dictionary
-        ret = []
+            elif paths:  # If the child node has valid paths
+                # Combine the existing paths with the new paths
+                combined_paths = []
+                for prev_path in reaction_paths[reaction_idx]:
+                    for curr_path in paths:
+                        combined_paths.append(prev_path + curr_path)
+                reaction_paths[reaction_idx] = combined_paths
+
+        # Aggregate all reaction paths
+        pathways = []
         for reaction_idx, paths in reaction_paths.items():
-            if len(paths) == 0:
-                paths.append([])
             for path in paths:
-                ret.append([reaction_idx] + path)
-        return ret
+                pathways.append([reaction_idx] + path)
+        return pathways
 
 
     def clean_path(self, all_path):
@@ -587,9 +583,3 @@ class TreeLoader():
             tree = pickle.load(f)
         print(f"Tree loaded from {filename}")
         return tree
-
-# if __name__ == '__main__':
-#     reactions_txt = ''
-#     target_substance = "poly(4-hydroxystyrene)"
-#     tree = Tree(target_substance.lower(), reactions_txt)
-#     result = tree.construct_tree()
