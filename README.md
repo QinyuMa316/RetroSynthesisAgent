@@ -1,7 +1,5 @@
 ## RetroSynthesisAgent
 code for "xxx" paper in xxx
-### Workflow
-![](images/workflow.png)
 ### Requirements
 + rdkit
 + requests
