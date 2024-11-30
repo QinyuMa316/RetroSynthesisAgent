@@ -1,5 +1,5 @@
 ## Workflow of RetroSynthesisAgent
-![](images/workflow.png)
+<img src="images/workflow.png" width="60%" />
 ## Requirements
 + rdkit
 + requests
