@@ -141,7 +141,6 @@ if __name__ == '__main__':
             print('load modified results data')
 
 
-
     # note: 2. expand reactions from lits
     if os.path.exists(add_results_filepath):
         with open(add_results_filepath, 'r') as file:

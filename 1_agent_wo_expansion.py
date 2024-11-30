@@ -1,7 +1,8 @@
 
-
+import os
 import json
-
+from RetroSynAgent.GPTAPI import GPTAPI
+from RetroSynAgent import prompts
 from RetroSynAgent.treebuilder import Tree, TreeLoader
 from RetroSynAgent.knowledgegraph import KnowledgeGraph
 
@@ -13,6 +14,31 @@ if __name__ == '__main__':
     result_folder_name = 'results_' + material
     result_json_name = 'gpt_results_40'
     modified_results_filepath = result_folder_name + '/' + result_json_name + '_modified.json'
+
+    # note: 1. substance name consistency in different literatures
+    if not os.path.exists(modified_results_filepath):
+        with open(result_folder_name+'/'+result_json_name+'.json', 'r') as file:
+            results_dict = json.load(file)
+            print('load original results data, starting modifying ...')
+        count = 1
+        for key, values in results_dict.items():
+            # count += 1
+            # if count >= 20:
+            reactions_txt = values[0]
+            prompt = prompts.prompt_unify_name.format(substance=material, reactions=reactions_txt)
+            print(f'===== origin txt:\n{reactions_txt}\n')
+            llm = GPTAPI()
+            reactions_txt_modified = llm.answer_wo_vision(prompt)
+            values[0] = reactions_txt_modified
+            print(f'===== modified txt:\n{reactions_txt_modified}\n')
+
+        with open(result_folder_name+'/'+result_json_name+'_modified.json', 'w') as file:
+            json.dump(results_dict, file, indent=4)
+    else:
+        with open(modified_results_filepath, 'r') as file:
+            results_dict = json.load(file)
+            print('load modified results data')
+
     # origin tree without expansion
     with open(modified_results_filepath, 'r') as file:
         results_dict = json.load(file)
