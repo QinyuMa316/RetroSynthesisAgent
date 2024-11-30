@@ -2,11 +2,13 @@
 + rdkit
 + requests
 + python-dotenv
-+ PubChemPy
 + PyMuPDF
-+ openai
 + scholarly
++ openai
 + networkx
++ graphviz
++ pubchempy
++ Pillow
 ## Data
 eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
 ## Environment Setting
