@@ -1,4 +1,4 @@
-## requirements
+## Requirements
 + rdkit
 + requests
 + python-dotenv
@@ -7,6 +7,8 @@
 + openai
 + scholarly
 + networkx
-## data
-eMolecules download url: https://downloads.emolecules.com/free/2024-07-01/
-## env. setting
+## Data
+eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
+## Environment Setting
+Set your OpenAI API key (`API_KEY`) and optional `BASE_URL` to use the LLM.
+Set the `HEADERS` and `COOKIES` from your browser for web scraping of literature.
