@@ -1,6 +1,8 @@
-## Workflow of RetroSynthesisAgent
+## RetroSynthesisAgent
+code for "xxx" paper in xxx
+### Workflow
 ![](images/workflow.png)
-## Requirements
+### Requirements
 + rdkit
 + requests
 + python-dotenv
@@ -11,8 +13,8 @@
 + graphviz
 + pubchempy
 + Pillow
-## Data
+### Data
 eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
-## Environment Setting
+### Environment Setting
 Set your OpenAI API key (`API_KEY`) and optional `BASE_URL` to use the LLM.
 Set the `HEADERS` and `COOKIES` from your browser for web scraping of literature.
