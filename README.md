@@ -9,3 +9,4 @@
 + networkx
 ## data
 eMolecules download url: https://downloads.emolecules.com/free/2024-07-01/
+## env. setting
