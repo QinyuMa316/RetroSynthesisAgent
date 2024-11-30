@@ -67,7 +67,7 @@ if __name__ == '__main__':
     # Note: 1. Rebuild the tree according to reactions_tree_filtered
 
     loader = TreeLoader()
-    tree_filtered_name = material + '_filtered2' + '.pkl'
+    tree_filtered_name = material + '_filtered' + '.pkl'
     tree_dir = 'tree_files'
     # tree_dir + '/' +
     # Note:
@@ -76,8 +76,7 @@ if __name__ == '__main__':
     reactions_tree_filtered = tree_filtered.show_tree(view=False, img_suffix=img_suffix)
     all_path_filtered = tree_filtered.find_all_paths()
     # random.shuffle(all_path_filtered)
-    print(f'{len(all_path_filtered)} paths in this tree after filtering')
-    # 28
+    print(f'{len(all_path_filtered)} paths in this tree after filtering') # 28
 
     # [[idx1,idx2], [idx3,idx4,idx5], ...] => idx1, idx2 \n idx3, idx4, idx5 \n
     # all_path_filtered_string = "\n".join([", ".join(map(str, path)) for path in all_path_filtered])
@@ -101,11 +100,7 @@ if __name__ == '__main__':
     filtered_pathways = filter_pathways(response_filtered_pathway, pathways_txt=all_pathways)
     with open('results_recommendation/filtered_pathways.txt', 'w') as f:
         f.write(filtered_pathways)
-    """
-    28 paths in this tree after filtering
-    20 pathways remaining - id_list
-    20 pathways remaining - filtered_entries
-    """
+
 
     # Note: 4. Recommendations are made based on the filtered reaction pathways
     with open('results_recommendation/filtered_pathways.txt', 'r') as f:
