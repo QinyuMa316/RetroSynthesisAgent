@@ -1,5 +1,5 @@
 # RetroSynthesisAgent
-code for "Leveraging Large Language Models as Knowledge-Driven Agents for Reliable Retrosynthesis Planning" paper in Fundamental Research
+code for "Leveraging Large Language Models as Knowledge-Driven Agents for Reliable Retrosynthesis Planning" paper.
 ## Requirements
 + rdkit
 + requests
