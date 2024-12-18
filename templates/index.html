@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+            /* 普通大树节点样式 */
+        .normal {
+            stroke: #555;
+            stroke-width: 0.1px;
+        }
+
+        /* 高亮小树节点样式 */
+        .highlight {
+            stroke: purple;
+            stroke-width: 1.2px;
+        }
+
+        /* 两条路径 */
+        .path1 {
+            stroke: purple;
+            stroke-width: 1.2px;
+            filter: drop-shadow(0 0 1px orangered) drop-shadow(0 0 1px orangered);
+        }
+
+        .path2 {
+            stroke: purple;
+            stroke-width: 1.2px;
+            filter: drop-shadow(0 0 1px hotpink) drop-shadow(0 0 1px hotpink);
+        }
+
+        .black_tree{
+            stroke: black;
+            stroke-width: 2px;
+        }
+
+        .highlightLinks{
+            stroke: black; /*black*/
+        }
+
+        .path1Links{
+            filter: drop-shadow(0 0 1px orangered) drop-shadow(0 0 1px orangered);
+        }
+
+        .path2Links{
+            filter: drop-shadow(0 0 1px hotpink) drop-shadow(0 0 1px hotpink);
+        }
+
+        .normalLinks{
+
+        }
+
+        /* 表格样式 */
+        table {
+            border-collapse: collapse;  /* 去掉表格边框间的间距 */
+            width: 80%;                 /* 设置表格宽度 */
+            margin: 0 auto;             /* 让表格居中显示 */
+            font-family: "Times New Roman"; /* 字体样式 */
+        }
+
+        td {
+            border: 1px solid #ddd;   /* 单元格的边框 */
+            padding: 8px;             /* 单元格内的填充 */
+            width: 16.66%;            /* 每个单元格宽度，占总表格宽度的六分之一 */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Tree Structure Visualization</h1>
+    <div id="tree-container">
+        <button id="downloadBtn">Download SVG</button>
+    </div>
+    <table id="indices-container">
+    </table>
+    <button onclick="exportTableToJson('table.json')">Download Json</button>
+    <!-- 引入JavaScript文件 -->
+    <script src="../static/radial_tidy_tree.js"></script>
+</body>
+</html>

@@ -117,8 +117,8 @@ class PDFProcessor:
         pdf_file_to_process = [pdf_name + '.pdf' for pdf_name in pdf_name_to_process]
 
         print(f'Total number of titles: {len(pdf_name_list)}, '
-              f'{len(self.processed_pdf_list)} have been processed by MLLM, '
-              f'{len(pdf_name_to_process)} are planned to be processed by MLLM')
+              f'{len(self.processed_pdf_list)} have been processed, '
+              f'{len(pdf_name_to_process)} are planned to be processed')
 
         os.makedirs(self.result_folder_name, exist_ok=True)
         counter = 0
@@ -172,8 +172,8 @@ class PDFProcessor:
         pdf_file_to_process = [pdf_name + '.pdf' for pdf_name in pdf_name_to_process]
 
         print(f'Total number of titles: {len(pdf_name_list)}, '
-              f'{len(self.processed_pdf_list)} have been processed by MLLM, '
-              f'{len(pdf_name_to_process)} are planned to be processed by MLLM')
+              f'{len(self.processed_pdf_list)} have been processed, '
+              f'{len(pdf_name_to_process)} are planned to be processed')
 
         os.makedirs(self.result_folder_name, exist_ok=True)
         counter = 0
@@ -204,9 +204,9 @@ class PDFProcessor:
         self.save_data_as_json(f"{self.result_folder_name}/{self.result_json_name}.json", self.result_dict)
         print(f"Saved result after processing all files.")
         # return self.result_dict
-        reactions_txt = ''
-        for key, value in self.result_dict.items():
-            reactions = value[0]
-            reactions_txt += (reactions + '\n\n')
-        return reactions_txt
+        # reactions_txt = ''
+        # for key, value in self.result_dict.items():
+        #     reactions = value[0]
+        #     reactions_txt += (reactions + '\n\n')
+        # return reactions_txt
 

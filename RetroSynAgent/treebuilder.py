@@ -62,7 +62,7 @@ class CommonSubstanceDB:
         while retries < max_retries:
             try:
                 if compound_identifier in self.added_database:
-                    print(f"{compound_identifier} query success")
+                    print(f"{compound_identifier} query succeed in emol or added db")
                     return True
                 # Query the compound by SMILES
                 compound = pubchempy.get_compounds(compound_identifier, 'smiles')
@@ -70,7 +70,7 @@ class CommonSubstanceDB:
                     # If SMILES query fails, try querying by name
                     compound = pubchempy.get_compounds(compound_identifier, 'name')
                 if compound:
-                    print(f"{compound_identifier} query succeed")
+                    print(f"{compound_identifier} query succeed in pubchem")
                     return True
                 return False
             except pubchempy.PubChemHTTPError as e:
@@ -80,7 +80,7 @@ class CommonSubstanceDB:
             except Exception as e:
                 print(f"other error: {e}")
                 # Other error: <urlopen error [Errno 54] Connection reset by peer>
-        print(f"{compound_identifier} query failed")  # Maximum number of retries reached
+        # print(f"{compound_identifier} query failed")  # Maximum number of retries reached
         return False
 
     @staticmethod
@@ -154,11 +154,15 @@ class Node:
         # The reactant already belongs to existing reactants, no need to expand further
         # if self.substance in init_reactants:
         if self.cache_func(self.substance):
+            print(f'{self.substance} query succeed.')
+            time.sleep(0.6)
             self.is_leaf = True
             # self.visited_substances[self.substance] = True
             # print(f"{self.substance} is accessible")
             return True
         else:
+            print(f'{self.substance} query failed.')
+            time.sleep(0.3)
             reactions_idxs = self.product_dict.get(self.substance, [])
             # The substance cannot be obtained through existing reactions
             if len(reactions_idxs) == 0:
@@ -442,7 +446,7 @@ class Tree:
                     queue.append(child)
         return dot
 
-    def get_reactions_in_tree(self, reaction_idx_list):
+    def get_reactions_in_tree_(self, reaction_idx_list):
         reactions_tree = ''
         for idx in reaction_idx_list:
             reactants = self.reactions[idx]['reactants']
@@ -454,23 +458,6 @@ class Tree:
             reactions_tree += reaction_string
         return reactions_tree
 
-
-    def show_tree(self, view=False, simple=False, dpi='500', img_suffix=''):
-
-        dot = self.add_nodes_edges_level_order2(self.root, simple=simple)
-        dot.attr(dpi=dpi)
-        dot.render(filename=str(self.target_substance) + img_suffix, format='png', view=view)
-        # tree_base64_image = self.png_to_base64(str(self.target_substance) + img_suffix + '.png')
-
-        # dot.render('substances_tree', format='svg', view=True)
-
-        # Extract the relevant reactions from all_reactions_txt based on the idx involved in the tree
-        # reactions_tree: all reactions(idx, reactants, products, conditions) in the tree
-        reaction_idx_list = list(self.reaction_infos)
-        reactions_tree = self.get_reactions_in_tree(reaction_idx_list)
-        return reactions_tree #, tree_base64_image
-
-
     def png_to_base64(self, png_path):
         # Open the PNG image file
         with Image.open(png_path) as image:
@@ -481,6 +468,21 @@ class Tree:
             # Get the binary content of the byte stream and encode it as Base64
             base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
         return base64_image
+
+    def get_reactions_in_tree(self, view=False, simple=False, dpi='500', img_suffix=''):
+
+        dot = self.add_nodes_edges_level_order2(self.root, simple=simple)
+        dot.attr(dpi=dpi)
+        dot.render(filename=str(self.target_substance) + img_suffix, format='png', view=view)
+        # tree_base64_image = self.png_to_base64(str(self.target_substance) + img_suffix + '.png')
+        # return tree_base64_image
+
+        # Extract the relevant reactions from all_reactions_txt based on the idx involved in the tree
+        # reactions_tree: all reactions(idx, reactants, products, conditions) in the tree
+        reaction_idx_list = list(self.reaction_infos)
+        reactions_tree = self.get_reactions_in_tree_(reaction_idx_list)
+        return reactions_tree #, tree_base64_image
+
 
 
     def find_all_paths(self):
@@ -533,7 +535,6 @@ class Tree:
             for path in paths:
                 pathways.append([reaction_idx] + path)
         return pathways
-
 
     def clean_path(self, all_path):
         # Deduplication function

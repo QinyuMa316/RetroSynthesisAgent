@@ -60,7 +60,7 @@ class PDFDownloader:
     def save_data_as_json(self, filename, data):
         with open(filename, 'w') as json_file:
             json.dump(data, json_file, indent=4)
-        print(f'{filename} saved!')
+        # print(f'{filename} saved!')
 
     def get_pdf_files(self):
         pdf_files = glob.glob(os.path.join(self.pdf_folder_name, '*.pdf'))

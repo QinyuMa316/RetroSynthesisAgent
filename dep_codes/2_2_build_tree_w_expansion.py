@@ -30,7 +30,7 @@ def update_json_file(add_results_filepath, add_results):
 
 
 def expand_reactions_from_lits(material, origin_result_dict, add_results_filepath, max_iter = 10):
-    os.makedirs('literatures_add', exist_ok=True)
+    os.makedirs('../literatures_add', exist_ok=True)
     result_dict = copy.deepcopy(origin_result_dict)
     # additional_reactions_txt = ''
     add_results = {}
@@ -153,16 +153,16 @@ if __name__ == '__main__':
 
 
     # note: key step expand to full
-    # add_results_new = expand_reactions_from_lits(material, results_dict, add_results_filepath, max_iter=3)
-    # if add_results_new:
-    #     add_results.update(add_results_new)
+    add_results_new = expand_reactions_from_lits(material, results_dict, add_results_filepath, max_iter=3)
+    if add_results_new:
+        add_results.update(add_results_new)
 
     # note: 3. build tree
     # update: if the key is the same, it will overwrite the original
 
     if add_results:
         results_dict.update(add_results) # update in-place operaction return null
-        tree = Tree(material.lower(), result_dict=results_dict)
+        tree = Tree(material.lower(), result_dict =results_dict)
         print('build tree with added reactions')
         img_suffix = '_40_modified_add'
     else:
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         unexp_sub_list = list(tree.unexpandable_substances)
         unexp_sub_string = '\n'.join(unexp_sub_list)
         print(f"\n=== Unexpandable Substances:\n{unexp_sub_string}\n")
-        with open("unexp_sub_list.json", 'w') as file:
+        with open("../unexp_sub_list.json", 'w') as file:
             json.dump(unexp_sub_list, file, indent=4)
 
     loader = TreeLoader()

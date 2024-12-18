@@ -55,8 +55,8 @@ if __name__ == '__main__':
     tree = loader.load_tree(tree_dir + "/" + material + '.pkl')
     # reactions_tree: all reactions (idx, reactants, products, conditions, source) in the tree
     img_suffix = '_40_modified_add'
-    reactions_tree = tree.show_tree(view=False, simple=False, img_suffix=img_suffix)
-
+    # reactions_tree = tree.show_tree(view=False, simple=False, img_suffix=img_suffix)
+    reactions_tree = tree.get_reactions_in_tree()
     # Note: 1. Use LLM to filter reactions based on conditions
     prompt1 = prompts.filter_reactions_prompt_template.format(reactions=reactions_tree)
     response1 = GPTAPI(temperature=0.0).answer_wo_vision(prompt1)

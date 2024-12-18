@@ -12,7 +12,7 @@ if __name__ == '__main__':
     material = 'Polyimide'
     pdf_folder_name = 'literature_pdfs_' + material
     result_folder_name = 'results_' + material
-    result_json_name = 'gpt_results_40'
+    result_json_name = 'llm_results'
     modified_results_filepath = result_folder_name + '/' + result_json_name + '_modified.json'
 
     # note: 1. substance name consistency in different literatures
@@ -57,7 +57,6 @@ if __name__ == '__main__':
 
     all_path = tree.find_all_paths()
     print(f'{len(all_path)} paths in this tree')
-
     reactions = tree.reactions
     kg = KnowledgeGraph(reactions)
     # kg.visualize_kg(html_name=f"KG_{material}.html")
