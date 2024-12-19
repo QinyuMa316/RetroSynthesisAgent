@@ -18,6 +18,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Process PDFs and extract reactions.")
     parser.add_argument('--material', type=str, required=True, help="Material name for processing.")
     parser.add_argument('--num_results', type=int, required=True, help="Number of results to download.")
+    parser.add_argument('--filtration', type=str, default="False", choices=["True", "False"], help="Whether to filter reactions.")
     return parser.parse_args()
 
 # ensure substance name consistency in different literatures
@@ -133,6 +134,8 @@ def expand_reactions_from_lits(result_folder_name, result_json_name, material, o
                         pdf_processor = PDFProcessor()
                         # pdf_path = 'substances_name/literature_title.pdf'
                         long_string = pdf_processor.pdf_to_long_string(pdf_path)
+                        total_length = len(long_string)
+                        print(f'Processing: {pdf_name}, TXT Length: {total_length}')
                         prompt = prompts.prompt_add_reactions_from_lits_template.format(material=substance)
                         llm = GPTAPI()
                         response = llm.answer_wo_vision(prompt, content=long_string)
@@ -238,11 +241,13 @@ def concatPathwayandReactions(reactions_txt, all_path_list):
 def main():
     # material = 'Polyimide'
     # num_results = 10
+    # filtration = False
 
     # Parse command-line arguments
     args = parse_arguments()
     material = args.material
     num_results = args.num_results
+    filtration = args.filtration == "True"  # turn str to bool
 
     pdf_folder_name = 'literature_pdfs_' + material
     result_folder_name = 'results_' + material
@@ -299,8 +304,6 @@ def main():
     print(f'The tree contains {len(all_path_exp)} pathways '
           f'and {node_count_exp} nodes in the knowledge graph after expansion.')
     reactions_tree_exp = tree_exp.get_reactions_in_tree()
-
-    filtration = False
 
     if filtration: # based on condition
         # 7 filter reactions (optional)
