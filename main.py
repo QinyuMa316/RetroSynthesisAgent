@@ -17,7 +17,7 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(description="Process PDFs and extract reactions.")
     parser.add_argument('--material', type=str, required=True, help="Material name for processing.")
-    parser.add_argument('--num_results', type=int, required=True, help="Number of results to download.")
+    parser.add_argument('--num_results', type=int, required=True, help="Number of PDF to download.")
     parser.add_argument('--filtration', type=str, default="False", choices=["True", "False"], help="Whether to filter reactions.")
     return parser.parse_args()
 
