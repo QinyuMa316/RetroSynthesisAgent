@@ -239,6 +239,7 @@ def concatPathwayandReactions(reactions_txt, all_path_list):
 
 
 def main():
+    # demo
     # material = 'Polyimide'
     # num_results = 10
     # filtration = False
@@ -328,7 +329,6 @@ def main():
 
     # 8 recommend reactions
     # 1) Integrating pathway ids & reactions
-
     # reactions_tree_exp: str (reaction txt in the tree), all_path_exp: list (reaction pathway idx list)
 
     all_pathways_w_reactions = concatPathwayandReactions(reactions_tree_exp, all_path_exp)
