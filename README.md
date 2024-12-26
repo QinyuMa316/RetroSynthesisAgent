@@ -22,4 +22,5 @@ Parameter Description:
 + `--filtration`: Determines whether to apply filtration to the reactions.
 
 We provide a demo video of its automated operation process:
+
 [![Watch Demo](assets/thumbnail.png)](assets/demo-video.mp4)
