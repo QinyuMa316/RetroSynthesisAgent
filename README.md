@@ -29,7 +29,5 @@ Parameter Description:
 `--num_results`: Defines the number of PDF to be processed.
 `--filtration`: Determines whether to apply filtration to the reactions.
 
-<video width="320" height="240" controls>
-    <source src="assets/demo-video.mp4" type="video/mp4">
-</video>
+[![Watch Demo](assets/thumbnail.png)](assets/demo.mp4)
 
