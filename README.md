@@ -21,4 +21,5 @@ Parameter Description:
 + `--num_results`: Defines the number of PDF to be processed.
 + `--filtration`: Determines whether to apply filtration to the reactions.
 
+We provide a demo video of its automated operation process:
 [![Watch Demo](assets/thumbnail.png)](assets/demo-video.mp4)
