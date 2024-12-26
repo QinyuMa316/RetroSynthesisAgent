@@ -17,8 +17,8 @@ Download it and turn it to a set as a format of json
 `sh exeRroSynAgent.sh`
 
 Parameter Description:
-`--material`: Specifies the material to be processed.
-`--num_results`: Defines the number of PDF to be processed.
-`--filtration`: Determines whether to apply filtration to the reactions.
++ `--material`: Specifies the material to be processed.
++ `--num_results`: Defines the number of PDF to be processed.
++ `--filtration`: Determines whether to apply filtration to the reactions.
 
 [![Watch Demo](assets/thumbnail.png)](assets/demo-video.mp4)
