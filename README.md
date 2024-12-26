@@ -1,19 +1,11 @@
 # RetroSynthesisAgent
 code for "Leveraging Large Language Models as Knowledge-Driven Agents for Reliable Retrosynthesis Planning" paper
 ## Requirements
-+ rdkit
-+ requests
-+ python-dotenv
-+ PyMuPDF
-+ scholarly
-+ openai
-+ networkx
-+ graphviz
-+ pubchempy
-+ Pillow
-+ fastapi
-+ pydantic
-+ uvicorn
+
+```
+pip install rdkit requests python-dotenv PyMuPDF scholarly openai networkx graphviz pubchempy Pillow fastapi pydantic uvicorn pyvis loguru
+```
+
 ## Data
 eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
 Download it and turn it to a set as a format of json
