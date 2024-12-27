@@ -1,5 +1,6 @@
 # RetroSynthesisAgent
 **code for paper "Leveraging Large Language Models as Knowledge-Driven Agents for Reliable Retrosynthesis Planning".**
+
 This project aims to conduct retrosynthesis planning for polymer materials based on literature, utilizing an LLM agent and knowledge graphs.
 
 ## Requirements
