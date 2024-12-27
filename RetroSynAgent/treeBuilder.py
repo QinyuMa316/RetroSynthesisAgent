@@ -205,14 +205,16 @@ class Node:
 
 # retrosynthetic Tree, contains all substance nodes
 class Tree:
-    def __init__(self, target_substance, result_dict=None, reactions_txt=None):
+    def __init__(self, target_substance, result_dict=None, reactions_txt=None, reactions=None):
         """
         reactions_dict[str(idx)] = {
             'reactants': tuple(reactants),
             'products': tuple(products),
             'conditions': conditions, }
         """
-        if result_dict:
+        if reactions:
+            self.reactions = reactions
+        elif result_dict:
             self.reactions, self.reactions_txt = self.parse_results(result_dict)
         elif reactions_txt:
             self.reactions = self.parse_reactions_txt(reactions_txt)

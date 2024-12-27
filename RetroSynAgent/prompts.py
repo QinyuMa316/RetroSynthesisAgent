@@ -32,7 +32,7 @@ Do not include any explanatory notes, brackets, or additional information.
 """
 
 
-prompt_unify_name = """
+prompt_align_root_node = """
 For the given reactions, check if any substances are different names for the same entity as "{substance}". If so, standardize all names to "{substance}". 
 Ensure that the output includes all original reactions, with only the inconsistent names modified. 
 Output the same number of reactions as provided, maintaining the original format. No additional notes, brackets, or information should be included.
@@ -40,6 +40,30 @@ Output the same number of reactions as provided, maintaining the original format
 reactions:
 
 {reactions}
+"""
+
+prompt_template_entity_alignment = """
+Substances:
+{substances}
+
+Analyze the listed substances and determine if any are identical (completely the same substance, not isomers) but are referred to by different names. If identical substances are found, standardize their names to the most commonly used and scientifically accepted name.
+Be meticulous in identifying identical substances and standardizing their names to avoid any omissions.
+
+Provide your output in the following format:
+
+Different names for the same substance:
+List all names that refer to the same substance.
+
+Standardized name:
+Provide the most commonly used name as the standardized version.
+
+Example Output:
+
+Different names for the same substance: Benzophenonetetracarboxylic dianhydride, Benzophenone tetracarboxylic dianhydride
+Standardized name: Benzophenone tetracarboxylic dianhydride
+
+Different names for the same substance: 4,4'-Oxydianiline, 4,4'-Diaminodiphenyl ether
+Standardized name: 4,4'-Oxydianiline
 """
 
 
