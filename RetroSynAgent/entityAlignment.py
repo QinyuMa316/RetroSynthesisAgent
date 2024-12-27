@@ -4,8 +4,6 @@ import json
 import os
 from tqdm import tqdm
 
-
-
 class EntityAlignment:
     # ensure substance name consistency in different literatures
     def alignRootNode(self, result_folder_name, result_json_name, material):
