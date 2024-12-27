@@ -90,15 +90,15 @@ def concatPathwayandReactions(reactions_txt, all_path_list):
 
 def main():
     # demo
-    material = 'Polyimide'
-    num_results = 10
-    filtration = False
+    # material = 'Polyimide'
+    # num_results = 10
+    # filtration = False
 
     # # Parse command-line arguments
-    # args = parse_arguments()
-    # material = args.material
-    # num_results = args.num_results
-    # filtration = args.filtration == "True"  # turn str to bool
+    args = parse_arguments()
+    material = args.material
+    num_results = args.num_results
+    filtration = args.filtration == "True"  # turn str to bool
 
     treeloader = TreeLoader()
     entityalignment = EntityAlignment()
@@ -121,7 +121,7 @@ def main():
                                  result_json_name=result_json_name)
     pdf_processor.load_existing_results()
     pdf_processor.process_pdfs_txt(save_batch_size=2)
-    # 3 entity alignment（ root node ）
+    # 3 entity alignment
     results_dict = entityalignment.alignRootNode(result_folder_name, result_json_name, material)
 
     # 5 construct kg & tree
@@ -130,16 +130,7 @@ def main():
     tree_wo_exp.construct_tree()
     tree_filename = tree_folder_name + '/' + material + '_wo_exp.pkl'
     treeloader.save_tree(tree_wo_exp, tree_filename)
-    # # ========================================================================
-    # # 6 entity alignment ( other nodes ) wo exp & rebuild the tree after entity alignment
-    # print('Performing entity alignment...')
-    # reactions_dict_wo_exp = tree_wo_exp.reactions
-    # reactions_dict_wo_exp_alg = entityalignment.entityAlignment(reactions_dict_wo_exp)
-    # print('Rebuilding the tree after entity alignment...')
-    # tree_wo_exp = Tree(material.lower(), reactions = reactions_dict_wo_exp_alg)
-    # tree_filename = tree_folder_name + '/' + material + '_wo_exp_alg.pkl'
-    # treeloader.save_tree(tree_wo_exp, tree_filename)
-    # # ========================================================================
+
     # nodes & pathway count (tree wo exp)
     node_count_wo_exp = countNodes(tree_wo_exp)
     all_path_wo_exp = searchPathways(tree_wo_exp)
@@ -163,17 +154,7 @@ def main():
 
     tree_filename_exp = tree_folder_name + '/' + material + '_w_exp.pkl'
     treeloader.save_tree(tree_exp, tree_filename_exp)
-    # # ========================================================================
-    # # 8 entity alignment ( other nodes ) w exp & rebuild the tree after entity alignment
-    # print('Performing entity alignment...')
-    # reactions_dict_exp = tree_exp.reactions
-    # reactions_dict_exp_alg = entityalignment.entityAlignment(reactions_dict_exp)
-    # print('Rebuilding the tree after entity alignment...')
-    # tree_exp = Tree(material.lower(), reactions=reactions_dict_exp_alg)
-    #
-    # tree_filename_exp = tree_folder_name + '/' + material + '_w_exp_alg.pkl'
-    # treeloader.save_tree(tree_exp, tree_filename_exp)
-    # # ========================================================================
+
     # nodes & pathway count (tree w exp)
     node_count_exp = countNodes(tree_exp)
     all_path_exp = searchPathways(tree_exp)

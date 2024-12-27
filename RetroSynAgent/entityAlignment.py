@@ -3,6 +3,7 @@ from .GPTAPI import GPTAPI
 import json
 import os
 from tqdm import tqdm
+import re
 
 class EntityAlignment:
     # ensure substance name consistency in different literatures

@@ -68,29 +68,17 @@ material = 'Polyimide'
 
 tree_loader = TreeLoader()
 
-alignment = False
-if not alignment:
-    # 【主图】
-    tree_main_filename = f'tree_files/{material}_w_exp.pkl'
-    # 【子图】- 玫红色
-    # tree_filtered_filename = f'tree_files/{material}_filtered.pkl'
-    # 【子图2】- 黑色
-    tree_wo_exp_filename = f'tree_files/{material}_wo_exp.pkl'
-    # 【路径1】
-    path_1 = f"tree_files/{material}_pathway1.pkl"
-    # 【路径2】
-    # path_2 = "tree_files/pathway2.pkl"
-else:
-    # 【主图】
-    tree_main_filename = f'tree_files/{material}_w_exp_alg.pkl'
-    # 【子图】- 玫红色
-    # tree_filtered_filename = f'tree_files/{material}_filtered.pkl'
-    # 【子图2】- 黑色
-    tree_wo_exp_filename = f'tree_files/{material}_wo_exp_alg.pkl'
-    # 【路径1】
-    path_1 = f"tree_files/{material}_pathway1.pkl"
-    # 【路径2】
-    # path_2 = "tree_files/pathway2.pkl"
+
+# 【主图】
+tree_main_filename = f'tree_files/{material}_w_exp.pkl'
+# 【子图】- 玫红色
+# tree_filtered_filename = f'tree_files/{material}_filtered.pkl'
+# 【子图2】- 黑色
+tree_wo_exp_filename = f'tree_files/{material}_wo_exp.pkl'
+# 【路径1】
+path_1 = f"tree_files/{material}_pathway1.pkl"
+# 【路径2】
+# path_2 = "tree_files/pathway2.pkl"
 
 
 tree_main = tree_loader.load_tree(tree_main_filename)
