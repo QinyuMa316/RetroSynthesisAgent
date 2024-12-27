@@ -33,15 +33,23 @@ class EntityAlignment:
         return results_dict
 
     def getNamingStdMap(self, reactions_dict):
-        all_reactants = set()
+        smiles_pattern = re.compile(r'^[A-Za-z0-9@+\-#\(\)\\/\=\[\]\.\%\:\?]*$')
+        all_substances = set()
         for key, entry in reactions_dict.items():
             reactants = list(entry['reactants'])
-            all_reactants.update(reactants)
-        all_reactants = list(all_reactants)
-        print(f'total num of substances: {len(all_reactants)}')
+            # all_reactants.update(reactants)
+            for reactant in reactants:
+                if not smiles_pattern.match(reactant):
+                    all_substances.add(reactant)
+            products = list(entry['products'])
+            for product in products:
+                if not smiles_pattern.match(product):
+                    all_substances.add(product)
+        all_substances = list(all_substances)
+        print(f'total num of macro Mols: {len(all_substances)}')
         #
         llm = GPTAPI(temperature=0.1)
-        prompt_naming = prompts.prompt_template_entity_alignment.format(substances=all_reactants)
+        prompt_naming = prompts.prompt_template_entity_alignment.format(substances=all_substances)
         align_result = llm.answer_wo_vision(prompt_naming)
         #
         result = {}
