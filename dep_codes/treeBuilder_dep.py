@@ -8,10 +8,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import os
-import re
-from tqdm import tqdm
 from collections import deque
-import concurrent.futures
 
 class CommonSubstanceDB:
     def __init__(self):
@@ -87,23 +84,17 @@ class CommonSubstanceDB:
         return False
 
     @staticmethod
-    def get_smiles_from_name(identifier):
-        smiles_pattern = re.compile(r'^[A-Za-z0-9@+\-#\(\)\\/\=\[\]\.\%\:\?]*$')
-        if smiles_pattern.match(identifier):
-            return identifier
-
-        compounds = pubchempy.get_compounds(identifier, 'name')
+    def get_smiles_from_name(compound_name):
+        compounds = pubchempy.get_compounds(compound_name, 'name')
         if compounds:
             return compounds[0].canonical_smiles
         else:
-            return identifier
-
+            return compound_name
 
 class Node:
     def __init__(self, substance, reactions, product_dict,
                  fathers_set=None, father=None, reaction_index=None,
-                 reaction_line=None, cache_func=None, unexpandable_substances=None,
-                 smiles_converter=None):  # , visited_substances=None):
+                 reaction_line=None, cache_func=None, unexpandable_substances=None):  # , visited_substances=None):
         '''
         reaction_index: Index of the reaction that produces the substance: idx (str)
         substance: The name of the current node: name (str)
@@ -123,7 +114,6 @@ class Node:
         self.reactions = reactions
         self.product_dict = product_dict
         self.unexpandable_substances = unexpandable_substances
-        self.smiles_converter = smiles_converter
         # self.visited_substances = visited_substances
 
     def add_child(self, substance: str, reaction_index: int):
@@ -133,21 +123,18 @@ class Node:
         Current child's parent set: curr_child_fathers_set = Current node (current child's parent) self + current node's parent set
         Current child's reaction path: curr_child_reaction_line = idx from current node to current child + current node's reaction path
         '''
-        # Convert substance name to SMILES
-
         curr_child_fathers_set = copy.deepcopy(self.fathers_set)
         curr_child_fathers_set.add(self.substance)
         curr_child_reaction_line = copy.deepcopy(self.reaction_line) + [reaction_index]
-        child = Node(self.smiles_converter(substance),
-                     self.reactions, self.product_dict,
+        child = Node(substance, self.reactions, self.product_dict,
                      fathers_set=curr_child_fathers_set,
                      father=self,
                      reaction_index=reaction_index,
                      reaction_line=curr_child_reaction_line,
                      cache_func=self.cache_func,
                      unexpandable_substances=self.unexpandable_substances,
-                     smiles_converter=self.smiles_converter
-                     )
+                     # visited_substances = self.visited_substances
+                     )  # Pass caching function
         self.children.append(child)
         return child
 
@@ -168,7 +155,7 @@ class Node:
         # if self.substance in init_reactants:
         if self.cache_func(self.substance):
             print(f'{self.substance} query succeed.')
-            time.sleep(0.3)
+            time.sleep(0.6)
             self.is_leaf = True
             # self.visited_substances[self.substance] = True
             # print(f"{self.substance} is accessible")
@@ -225,25 +212,18 @@ class Tree:
             'products': tuple(products),
             'conditions': conditions, }
         """
-        # if reactions:
-        #     self.reactions_wo_alg = reactions
-        # elif result_dict:
-        #     self.reactions_wo_alg, self.reactions_txt = self.parse_results(result_dict)
-        # elif reactions_txt:
-        #     self.reactions_wo_alg = self.parse_reactions_txt(reactions_txt)
-        # self.reactions = self.entityAlignment(self.reactions_wo_alg)
         if reactions:
             self.reactions = reactions
         elif result_dict:
             self.reactions, self.reactions_txt = self.parse_results(result_dict)
         elif reactions_txt:
             self.reactions = self.parse_reactions_txt(reactions_txt)
+        # self.reactions = self.parse_reactions(reactions_txt)
         self.product_dict = self.get_product_dict(self.reactions)
         self.target_substance = target_substance
         # self.root = Node(target_substance)
         self.reaction_infos = set()
         self.all_path = []
-        self.db = CommonSubstanceDB()
         self.chemical_cache = self.load_dict_from_json()  # Used to record whether a substance can be queried in the database
         self.unexpandable_substances = set()  # Set of nodes that cannot be expanded
         # self.visited_substances = {}  # Records the substances visited and their expansion results
@@ -251,27 +231,8 @@ class Tree:
         self.root = Node(target_substance, self.reactions, self.product_dict,
                          cache_func=self.is_common_chemical_cached,
                          unexpandable_substances=self.unexpandable_substances,
-                         smiles_converter=self.db.get_smiles_from_name
+                         # visited_substances = self.visited_substances
                          )
-
-    # def process_entry(self, args):
-    #     key, entry = args
-    #     try:
-    #         entry['reactants'] = [self.db.get_smiles_from_name(reactant) for reactant in entry['reactants']]
-    #     except Exception as e:
-    #         # 记录错误信息，防止异常传播到主进程
-    #         print(f"Error processing {key}: {e}")
-    #     return key, entry
-    #
-    # def entityAlignment(self, reactions):
-    #     reactions_items = list(reactions.items())
-    #     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    #         results = list(tqdm(executor.map(self.process_entry, reactions_items),
-    #                             total=len(reactions_items),
-    #                             desc="Align Entities .."))
-    #
-    #     reactions_alg = dict(results)
-    #     return reactions_alg
 
     def get_product_dict(self, reactions_dict):
         '''
@@ -364,6 +325,7 @@ class Tree:
             reactions.update(additional_reactions)
         return reactions, reactions_txt_all
 
+
     def save_dict_as_json(self, dict_file, filename="substance_query_result.json"):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(dict_file, f, ensure_ascii=False, indent=4)
@@ -380,7 +342,8 @@ class Tree:
         """Use cache to avoid redundant compound queries"""
         if compound_name in self.chemical_cache:
             return self.chemical_cache[compound_name]
-        result = self.db.is_common_chemical(compound_name)
+        db = CommonSubstanceDB()
+        result = db.is_common_chemical(compound_name)
         self.chemical_cache[compound_name] = result
         self.save_dict_as_json(self.chemical_cache)
         return result
@@ -393,7 +356,7 @@ class Tree:
         if self.is_common_chemical_cached(self.root.substance):
             raise ValueError("Target substance is easily gotten.")
             # return ("Target substance is easily gotten.")
-        result = self.root.expand()
+        result = self.root.expand() #, init_reactants)
         if result:
             return True # "Build tree successfully!"
         else:
