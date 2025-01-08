@@ -1,7 +1,9 @@
 # RetroSynthesisAgent
-code for "Leveraging Large Language Models as Knowledge-Driven Agents for Reliable Retrosynthesis Planning" paper
-## Requirements
+**code for paper "Leveraging Large Language Models as Knowledge-Driven Agents for Reliable Retrosynthesis Planning".**
 
+This project aims to conduct retrosynthesis planning for polymer materials based on literature, utilizing an LLM agent and knowledge graphs.
+
+## Requirements
 ```
 pip install rdkit requests python-dotenv PyMuPDF scholarly openai networkx graphviz pubchempy Pillow fastapi pydantic uvicorn pyvis loguru
 ```
@@ -9,6 +11,7 @@ pip install rdkit requests python-dotenv PyMuPDF scholarly openai networkx graph
 ## Data
 eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
 Download it and turn it to a set as a format of json
+
 ## `env.` File Setting
 + Set your OpenAI API key (`API_KEY`) and optional `BASE_URL` to use the LLM.
 + Set the `HEADERS` and `COOKIES` from your browser for web scraping of literatures.
