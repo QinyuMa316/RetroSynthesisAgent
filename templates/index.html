@@ -6,7 +6,7 @@
     <title>Tree Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-            /* 普通大树节点样式 */
+        /* 普通大树节点样式 */
         .normal {
             stroke: #555;
             stroke-width: 0.1px;
@@ -14,7 +14,7 @@
 
         /* 高亮小树节点样式 */
         .highlight {
-            stroke: purple;
+            stroke: black;
             stroke-width: 1.2px;
         }
 
@@ -26,6 +26,7 @@
         }
 
         .path2 {
+            /*todo: change color*/
             stroke: purple;
             stroke-width: 1.2px;
             filter: drop-shadow(0 0 1px hotpink) drop-shadow(0 0 1px hotpink);
@@ -34,6 +35,31 @@
         .black_tree{
             stroke: black;
             stroke-width: 2px;
+        }
+
+        /*25-1-5*/
+        .path1_highlight{
+            stroke: black;
+            stroke-width: 1.2px;
+            filter: drop-shadow(0 0 1px orangered) drop-shadow(0 0 1px orangered);
+        }
+
+        .path1_normal{
+            stroke: #555;
+            stroke-width: 0.1px;
+            filter: drop-shadow(0 0 1px orangered) drop-shadow(0 0 1px orangered);
+        }
+
+        .path2_highlight{
+            stroke: black;
+            stroke-width: 1.2px;
+            filter: drop-shadow(0 0 1px hotpink) drop-shadow(0 0 1px hotpink);
+        }
+
+        .path2_normal{
+            stroke: #555;
+            stroke-width: 0.1px;
+            filter: drop-shadow(0 0 1px hotpink) drop-shadow(0 0 1px hotpink);
         }
 
         .highlightLinks{

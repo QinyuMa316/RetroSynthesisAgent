@@ -201,8 +201,6 @@ async def get_quadruple():
         "path1": path1_tree_api,
     }
 
-
-
 # 4 trees
 @app.get("/api/quad")
 async def get_quadruple():
