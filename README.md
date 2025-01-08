@@ -17,11 +17,13 @@ Download it and turn it to a set as a format of json
 + Set the `HEADERS` and `COOKIES` from your browser for web scraping of literatures.
 
 ## Run the demo
-`sh exeRroSynAgent.sh`
+`sh exeRetroSynAgent.sh`
 
 Parameter Description:
 + `--material`: Specifies the material to be processed.
 + `--num_results`: Defines the number of PDF to be processed.
++ `--alignment`: Determines whether to align entities except for root node.
++ `--expansion`: Whether to expand the tree with additional literature.
 + `--filtration`: Determines whether to apply filtration to the reactions.
 
 We provide a demo video of its automated operation process:

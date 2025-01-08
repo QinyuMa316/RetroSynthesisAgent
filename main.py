@@ -33,9 +33,6 @@ def parse_arguments():
     return parser.parse_args()
 
 def countNodes(tree):
-    # reactions = tree.reactions
-    # kg = KnowledgeGraph(reactions)
-    # node_count = kg.G.number_of_nodes()
     node_count = tree.get_node_count()
     return node_count
 
