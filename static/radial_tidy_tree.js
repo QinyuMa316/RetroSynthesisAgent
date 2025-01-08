@@ -52,20 +52,21 @@ async function fetchAndRenderFive() {
     }
 }
 
-// 这是画一棵树的
+// This is for rendering a single tree
 // document.addEventListener("DOMContentLoaded", fetchAndRenderTree);
 
-// 这是画两棵树的
+// This is for rendering two trees
 // document.addEventListener("DOMContentLoaded", fetchAndRenderDouble);
 
-// 这是画三棵树的
-// document.addEventListener("DOMContentLoaded", fetchAndRenderThree);
+// This is for rendering three trees
+document.addEventListener("DOMContentLoaded", fetchAndRenderThree);
 
-// 这是画四棵树的
-document.addEventListener("DOMContentLoaded", fetchAndRenderQuad);
+// This is for rendering four trees
+// document.addEventListener("DOMContentLoaded", fetchAndRenderQuad);
 
-// 这是画五棵树的
+// This is for rendering five trees
 // document.addEventListener("DOMContentLoaded", fetchAndRenderFive);
+
 
 function renderTree(treeData) {
     // size
@@ -339,10 +340,11 @@ function renderDoubleTree(bigTreeData, smallTreeData){
     });
 }
 
-function renderThreeTree(threeTree){
-    const mainTree = threeTree['main'];
-    const sonTree = threeTree['son'];
-    const path1 = threeTree['path1'];
+function renderThreeTree(quadTree){
+    const mainTree = quadTree['main'];
+    const sonTree = quadTree['son'];
+    const path1 = quadTree['path1'];
+    // const path2 = quadTree['path2'];
 
     // size
     const width = 928;
@@ -370,24 +372,36 @@ function renderThreeTree(threeTree){
     // 0: main树
     // 1: 子树
     // 2: path1
-    // 3: path2
 
     // 层次遍历获取小树的节点集合
     const sonTreeLevels = getNodesByLevel(sonTreeRoot);
-
     // 使用层序遍历匹配节点，并高亮路径
     highlightPaths_v2(mainTreeRoot, sonTreeLevels, 1);
 
-    // 层次遍历获取小树的节点集合
-    const path1TreeLevels = getNodesByLevel(path1TreeRoot);
-
-    // 使用层序遍历匹配节点，并高亮路径
-    highlightPaths_v2(mainTreeRoot, path1TreeLevels, 2);
-
+    // Bug-fixed: 25-1-5
+    // -----------------------------------------***------------------------------------------
+    // // 层次遍历获取小树的节点集合
+    // const path1TreeLevels = getNodesByLevel(path1TreeRoot);
+    // // 使用层序遍历匹配节点，并高亮路径
+    // highlightPaths_v2(mainTreeRoot, path1TreeLevels, 2);
+    //
     // // 层次遍历获取小树的节点集合
     // const path2TreeLevels = getNodesByLevel(path2TreeRoot);
     // // 使用层序遍历匹配节点，并高亮路径
     // highlightPaths_v2(mainTreeRoot, path2TreeLevels, 3);
+    // -----------------------------------------***------------------------------------------
+    // 层次遍历获取小树的节点集合
+    const path1TreeLevels = getNodesByLevel(path1TreeRoot);
+    // 使用层序遍历匹配节点，并高亮路径
+    // value: 2, neg_value: 3, superior_value: 1
+    highlightPaths_v3(mainTreeRoot, path1TreeLevels, value=2, neg_value=3, superior_value=1);
+
+    // // 层次遍历获取小树的节点集合
+    // const path2TreeLevels = getNodesByLevel(path2TreeRoot);
+    // // 使用层序遍历匹配节点，并高亮路径
+    // // value: 4, neg_value: 5, superior_value: 1
+    // highlightPaths_v3(mainTreeRoot, path2TreeLevels, value=4, neg_value=5, superior_value=1);
+
 
     // 染色所有边
     // highlightLinks(mainTreeRoot.links());
@@ -415,19 +429,36 @@ function renderThreeTree(threeTree){
             const source = d.source;
             const target = d.target;
             const num = target.isPathPoint;
-            if(num === 1){
+
+            // Bug-fixed: 25-1-5
+        // -----------------------------------------***------------------------------------------
+        //     if(num === 1){
+        //         return "highlightLinks";
+        //     }
+        //     else if (num === 2){
+        //         return "path1Links";
+        //     }
+        //     else if (num === 3){
+        //         return "path2Links";
+        //     }
+        //     else{
+        //         return "normalLinks";
+        //     }
+        // });
+                if(num === 1){
                 return "highlightLinks";
             }
-            else if (num === 2){
+            else if (num === 2 || num === 3){
                 return "path1Links";
             }
-            // else if (num === 3){
+            // else if (num === 4 || num === 5){
             //     return "path2Links";
             // }
             else{
                 return "normalLinks";
             }
         });
+        // -----------------------------------------***------------------------------------------
 
 
     // Append nodes.
@@ -450,6 +481,8 @@ function renderThreeTree(threeTree){
             else return "#82b0d2"; // 中间节点
         })
         .attr("r", 3)
+        // Bug-fixed: 25-1-5
+        // -----------------------------------------***------------------------------------------
         .attr("class", d => {
             if(d.isPathPoint === 0){
                 return "normal";
@@ -458,12 +491,23 @@ function renderThreeTree(threeTree){
                 return "highlight";
             }
             else if(d.isPathPoint === 2){
-                return "path1";
+                return "path1_normal";
             }
-            // else{
-            //     return "path2";
+            else if(d.isPathPoint === 3){
+                return "path1_highlight";
+            }
+            // else if(d.isPathPoint === 4){
+            //     return "path2_normal";
             // }
+            // else if(d.isPathPoint === 5){
+            //     return "path2_highlight";
+            // }
+            else{
+                return "normal";
+            }
         })
+
+        // -----------------------------------------***------------------------------------------
         // 添加鼠标悬停显示节点名称的事件
         .on("mouseover", function(event, d) { // 鼠标悬停事件
             const tooltip = d3.select("body").append("div") // 创建 tooltip 元素
@@ -577,15 +621,14 @@ function renderThreeTree(threeTree){
         URL.revokeObjectURL(url);
     });
 
-    console.log("Quadtree completed!");
+    console.log("4 tree completed!");
 }
-
 
 function renderQuadTree(quadTree){
     const mainTree = quadTree['main'];
     const sonTree = quadTree['son'];
     const path1 = quadTree['path1'];
-    const path2 = quadTree['path2']; /////
+    const path2 = quadTree['path2'];
 
     // size
     const width = 928;
@@ -632,7 +675,7 @@ function renderQuadTree(quadTree){
     // // 使用层序遍历匹配节点，并高亮路径
     // highlightPaths_v2(mainTreeRoot, path2TreeLevels, 3);
     // -----------------------------------------***------------------------------------------
-        // 层次遍历获取小树的节点集合
+    // 层次遍历获取小树的节点集合
     const path1TreeLevels = getNodesByLevel(path1TreeRoot);
     // 使用层序遍历匹配节点，并高亮路径
     // value: 2, neg_value: 3, superior_value: 1

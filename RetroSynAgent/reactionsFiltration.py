@@ -63,7 +63,7 @@ class ReactionsFiltration:
         result = ''.join(output)
         return result
 
-    def __getFullReactionPathways(self, tree):
+    def getFullReactionPathways(self, tree):
         all_path = tree.find_all_paths()
         reactions_tree = tree.get_reactions_in_tree()
         res = self.__concatPathwayandReactions(reactions_txt=reactions_tree, all_path_list=all_path)
@@ -88,9 +88,9 @@ class ReactionsFiltration:
         return filtered_pathways
 
     def filterPathways(self, tree):
-        all_pathways_w_reactions = self.__getFullReactionPathways(tree)
-        with open(f'{self.result_folder_name}/all_pathways.txt', 'w') as f:
-            f.write(all_pathways_w_reactions)
+        all_pathways_w_reactions = self.getFullReactionPathways(tree)
+        # with open(f'{self.result_folder_name}/all_pathways.txt', 'w') as f:
+        #     f.write(all_pathways_w_reactions)
 
         filename = f'{self.result_folder_name}/pathway_filtered.txt'
         if not os.path.exists(filename):

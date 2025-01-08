@@ -55,11 +55,11 @@ def recommendReactions(prompt, result_folder_name, response_name):
 def main():
     # material = 'Polyimide'
     # num_results = 10
-    # alignment = False
-    # expansion = False
+    # alignment = True
+    # expansion = True
     # filtration = False
 
-    # # Parse command-line arguments
+    # Parse command-line arguments
     args = parse_arguments()
     material = args.material
     num_results = args.num_results
@@ -81,7 +81,6 @@ def main():
     ### extractInfos
 
     # 1  query literatures & download
-
     downloader = PDFDownloader(material, pdf_folder_name=pdf_folder_name, num_results=num_results, n_thread=3)
     pdf_name_list = downloader.main()
     print(f'successfully downloaded {len(pdf_name_list)} pdfs for {material}')
@@ -172,6 +171,8 @@ def main():
         print(f'The aligned tree contains {node_count_exp_alg} nodes and {len(all_path_exp_alg)} pathways after expansion.')
         tree_exp = tree_exp_alg
 
+    all_pathways_w_reactions = reactions_filtration.getFullReactionPathways(tree_exp)
+
     ## Filtration
     if filtration:
         # filter reactions based on conditions
@@ -206,7 +207,6 @@ def main():
     tree_pathway1.construct_tree()
     tree_name_pathway1 = tree_folder_name + '/' + material + '_pathway1' + '.pkl'
     treeloader.save_tree(tree_pathway1, tree_name_pathway1)
-
 
 if __name__ == '__main__':
     main()

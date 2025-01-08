@@ -10,7 +10,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# 节点定义
+# define node in js
 class Node(BaseModel):
     name: str
     children: Optional[List['Node']] = None
@@ -123,7 +123,7 @@ material = 'Polyimide'
 
 tree_loader = TreeLoader()
 
-tree_folder = 'tree_pi/0105-final'
+tree_folder = 'tree_pi'
 # main_tree
 tree_main_filename = f'{tree_folder}/{material}_w_exp_alg.pkl'
 # sub_tree_1_purple
@@ -166,7 +166,7 @@ if os.path.exists(path_2):
 #     tree_test_api = create_tree_from_saved_tree_2(tree_test)
 
 
-# 路由：主页
+# main page
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -181,7 +181,7 @@ async def read_root(request: Request):
 # 2 trees
 @app.get("/api/double")
 async def get_double():
-    print("执行DOUBLE")
+    print("TWO")
 
     return {
         "bigTree": tree_main_api,
@@ -192,7 +192,7 @@ async def get_double():
 # 3 trees
 @app.get("/api/three")
 async def get_quadruple():
-    print("执行QUADRUPLE")
+    print("THREE")
     return {
         "main": tree_main_api,
         "son": tree_wo_exp_api,
@@ -202,7 +202,7 @@ async def get_quadruple():
 # 4 trees
 @app.get("/api/quad")
 async def get_quadruple():
-    print("执行QUADRUPLE")
+    print("FOUR")
     return {
         "main": tree_main_api,
         "son": tree_wo_exp_api,
@@ -213,7 +213,7 @@ async def get_quadruple():
 # 5 trees
 # @app.get("/api/five")
 # async def get_five():
-#     print("执行FIVE")
+#     print("FIVE")
 #     return {
 #         "main": tree_main_api,
 #         "son": tree_filtered_api,

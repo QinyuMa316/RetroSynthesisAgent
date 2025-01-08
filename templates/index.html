@@ -6,19 +6,19 @@
     <title>Tree Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        /* 普通大树节点样式 */
+        /* Style for normal large tree nodes */
         .normal {
             stroke: #555;
             stroke-width: 0.1px;
         }
 
-        /* 高亮小树节点样式 */
+        /* Style for highlighted small tree nodes */
         .highlight {
             stroke: black;
             stroke-width: 1.2px;
         }
 
-        /* 两条路径 */
+        /* Style for two paths */
         .path1 {
             stroke: purple;
             stroke-width: 1.2px;
@@ -40,7 +40,7 @@
         /*25-1-5*/
         .path1_highlight{
             stroke: black;
-            stroke-width: 1.2px;
+            stroke-width: 1.0px;
             filter: drop-shadow(0 0 1px orangered) drop-shadow(0 0 1px orangered);
         }
 
@@ -52,7 +52,7 @@
 
         .path2_highlight{
             stroke: black;
-            stroke-width: 1.2px;
+            stroke-width: 1.0px;
             filter: drop-shadow(0 0 1px hotpink) drop-shadow(0 0 1px hotpink);
         }
 
@@ -78,18 +78,18 @@
 
         }
 
-        /* 表格样式 */
+        /* Table style */
         table {
-            border-collapse: collapse;  /* 去掉表格边框间的间距 */
-            width: 80%;                 /* 设置表格宽度 */
-            margin: 0 auto;             /* 让表格居中显示 */
-            font-family: "Times New Roman"; /* 字体样式 */
+            border-collapse: collapse;  /* Remove spacing between table borders */
+            width: 80%;                 /* Set table width */
+            margin: 0 auto;             /* Center the table */
+            font-family: "Arial";       /* Set font style */
         }
 
         td {
-            border: 1px solid #ddd;   /* 单元格的边框 */
-            padding: 8px;             /* 单元格内的填充 */
-            width: 16.66%;            /* 每个单元格宽度，占总表格宽度的六分之一 */
+            border: 1px solid #ddd;     /* Border for each cell */
+            padding: 8px;               /* Padding inside each cell */
+            width: 16.66%;              /* Each cell takes one-sixth of the table width */
         }
 
     </style>
@@ -102,7 +102,7 @@
     <table id="indices-container">
     </table>
     <button onclick="exportTableToJson('table.json')">Download Json</button>
-    <!-- 引入JavaScript文件 -->
+    <!-- Include JavaScript file -->
     <script src="../static/radial_tidy_tree.js"></script>
 </body>
 </html>
