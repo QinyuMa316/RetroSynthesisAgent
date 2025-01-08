@@ -17,7 +17,7 @@ Download it and turn it to a set as a format of json
 + Set the `HEADERS` and `COOKIES` from your browser for web scraping of literatures.
 
 ## Run the demo
-`sh exeRetroSynAgent.sh`
+`sh RetroSynAgent.sh`
 
 Parameter Description:
 + `--material`: Specifies the material to be processed.

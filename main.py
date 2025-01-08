@@ -118,8 +118,8 @@ def main():
             # tree_wo_exp_alg = Tree(material.lower(), reactions=reactions_wo_exp_alg)
             reactions_wo_exp = tree_wo_exp.reactions
             reactions_wo_exp_alg_1 = entityalignment.entityAlignment_1(reactions_dict=reactions_wo_exp)
-            reactions_exp_alg_all = entityalignment.entityAlignment_2(reactions_dict=reactions_wo_exp_alg_1)
-            tree_wo_exp_alg = Tree(material.lower(), reactions=reactions_exp_alg_all)
+            reactions_wo_exp_alg_all = entityalignment.entityAlignment_2(reactions_dict=reactions_wo_exp_alg_1)
+            tree_wo_exp_alg = Tree(material.lower(), reactions=reactions_wo_exp_alg_all)
             tree_wo_exp_alg.construct_tree()
             treeloader.save_tree(tree_wo_exp_alg, tree_name_wo_exp_alg)
         else:

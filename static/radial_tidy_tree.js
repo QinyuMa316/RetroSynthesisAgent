@@ -59,10 +59,10 @@ async function fetchAndRenderFive() {
 // document.addEventListener("DOMContentLoaded", fetchAndRenderDouble);
 
 // This is for rendering three trees
-document.addEventListener("DOMContentLoaded", fetchAndRenderThree);
+// document.addEventListener("DOMContentLoaded", fetchAndRenderThree);
 
 // This is for rendering four trees
-// document.addEventListener("DOMContentLoaded", fetchAndRenderQuad);
+document.addEventListener("DOMContentLoaded", fetchAndRenderQuad);
 
 // This is for rendering five trees
 // document.addEventListener("DOMContentLoaded", fetchAndRenderFive);
@@ -579,16 +579,29 @@ function renderThreeTree(quadTree){
 
     // 遍历排序后的数组并生成表格行
     const datasPerRow = 3;
-    let currentRow = document.createElement("tr");
+    // Bug-1-8:最后不够三行的数据直接不加入了
+    // --------------------------------------------------------------------------
+    // let currentRow = document.createElement("tr");
+    // sortedEntries.forEach(([substance, idx]) => {
+    //     const cell = document.createElement('td');
+    //     cell.innerHTML = `<td>${idx}: ${substance}</td>`;
+    //     currentRow.appendChild(cell);
+    //
+    //     if(idx % datasPerRow === 0) {
+    //         tbody.appendChild(currentRow);
+    //         currentRow = document.createElement("tr");
+    //     }
+    // });
+    // --------------------------------------------------------------------------
+    let currentRow;
     sortedEntries.forEach(([substance, idx]) => {
+        if((idx - 1) % datasPerRow === 0) {
+            currentRow = document.createElement("tr");
+            tbody.appendChild(currentRow);
+        }
         const cell = document.createElement('td');
         cell.innerHTML = `<td>${idx}: ${substance}</td>`;
         currentRow.appendChild(cell);
-
-        if(idx % datasPerRow === 0) {
-            tbody.appendChild(currentRow);
-            currentRow = document.createElement("tr");
-        }
     });
 
     // 下载按钮
@@ -864,17 +877,31 @@ function renderQuadTree(quadTree){
 
     // 遍历排序后的数组并生成表格行
     const datasPerRow = 3;
-    let currentRow = document.createElement("tr");
+    // Bug-1-8:最后不够三行的数据直接不加入了
+    // --------------------------------------------------------------------------
+    // let currentRow = document.createElement("tr");
+    // sortedEntries.forEach(([substance, idx]) => {
+    //     const cell = document.createElement('td');
+    //     cell.innerHTML = `<td>${idx}: ${substance}</td>`;
+    //     currentRow.appendChild(cell);
+    //
+    //     if(idx % datasPerRow === 0) {
+    //         tbody.appendChild(currentRow);
+    //         currentRow = document.createElement("tr");
+    //     }
+    // });
+    // --------------------------------------------------------------------------
+    let currentRow;
     sortedEntries.forEach(([substance, idx]) => {
+        if((idx - 1) % datasPerRow === 0) {
+            currentRow = document.createElement("tr");
+            tbody.appendChild(currentRow);
+        }
         const cell = document.createElement('td');
         cell.innerHTML = `<td>${idx}: ${substance}</td>`;
         currentRow.appendChild(cell);
-
-        if(idx % datasPerRow === 0) {
-            tbody.appendChild(currentRow);
-            currentRow = document.createElement("tr");
-        }
     });
+
 
     // 下载按钮
     // 下载SVG图像

@@ -170,9 +170,11 @@ class Node:
             self.is_leaf = True
             # self.visited_substances[self.substance] = True
             # print(f"{self.substance} is accessible")
+            print(f'{self.substance} query succeed.')
+            # time.sleep(0.1)
             return True
         else:
-            # print(f'{self.substance} query failed.')
+            print(f'{self.substance} query failed.')
             # time.sleep(0.1)
             reactions_idxs = self.product_dict.get(self.substance, [])
             # The substance cannot be obtained through existing reactions
@@ -485,7 +487,7 @@ class Tree:
     # def _collect_non_leaf_nodes(self, node):
     #     non_leaf_nodes = []
     #     if not node.is_leaf:
-    #         non_leaf_nodes.append(node.substance)  # 假设节点有一个 `name` 属性
+    #         non_leaf_nodes.append(node.substance)
     #     for child in node.children:
     #         non_leaf_nodes.extend(self._collect_non_leaf_nodes(child))
     #     return non_leaf_nodes
@@ -496,7 +498,7 @@ class Tree:
     # def _collect_leaf_nodes(self, node):
     #     leaf_nodes = []
     #     if node.is_leaf:
-    #         leaf_nodes.append(node.substance)  # 假设节点有一个 `name` 属性
+    #         leaf_nodes.append(node.substance)
     #     for child in node.children:
     #         leaf_nodes.extend(self._collect_leaf_nodes(child))
     #     return leaf_nodes

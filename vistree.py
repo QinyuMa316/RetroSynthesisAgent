@@ -123,7 +123,7 @@ material = 'Polyimide'
 
 tree_loader = TreeLoader()
 
-tree_folder = 'tree_pi'
+tree_folder = 'tree_pi/0108-alg2-final'
 # main_tree
 tree_main_filename = f'{tree_folder}/{material}_w_exp_alg.pkl'
 # sub_tree_1_purple
@@ -139,7 +139,7 @@ path_2 = f"{tree_folder}/{material}_pathway2.pkl"
 if os.path.exists(tree_main_filename):
     tree_main = tree_loader.load_tree(tree_main_filename)
     tree_main_api = create_tree_from_saved_tree_2(tree_main)
-    print(f'succesfully loaded tree after expansion, '
+    print(f'successfully loaded tree after expansion, '
           f'{tree_main.get_node_count()} nodes in original tree, '
           f'{count_nodes(tree_main_api)} nodes in api tree.')
 # if os.path.exists(tree_filtered_filename):
@@ -148,8 +148,8 @@ if os.path.exists(tree_main_filename):
 if os.path.exists(tree_wo_exp_filename):
     tree_wo_exp = tree_loader.load_tree(tree_wo_exp_filename)
     tree_wo_exp_api = create_tree_from_saved_tree_2(tree_wo_exp)
-    print(f'succesfully loaded tree before expansion, '
-          f'{tree_wo_exp.get_node_count()} nodes in original tree.'
+    print(f'successfully loaded tree before expansion, '
+          f'{tree_wo_exp.get_node_count()} nodes in original tree, '
           f'{count_nodes(tree_wo_exp_api)} nodes in api tree.')
 if os.path.exists(path_1):
     path1_tree = tree_loader.load_tree(path_1)
@@ -191,7 +191,7 @@ async def get_double():
 
 # 3 trees
 @app.get("/api/three")
-async def get_quadruple():
+async def get_three():
     print("THREE")
     return {
         "main": tree_main_api,
@@ -222,6 +222,3 @@ async def get_quadruple():
 #         "black_tree": tree_wo_exp_api
 #     }
 
-
-    # succesfully loaded tree after expansion, 3351 nodes in original tree, 292 nodes in api tree.
-    # succesfully loaded tree before expansion, 384 nodes in original tree, 111 nodes in api tree.
