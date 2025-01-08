@@ -13,12 +13,16 @@ from PIL import Image
 
 
 class PDFProcessor:
-    def __init__(self, pdf_folder_name=None, result_folder_name = os.getcwd(), result_json_name='gpt_results'):
+    def __init__(self, pdf_folder_name=None,
+                 result_folder_name = os.getcwd(),
+                 result_json_name='gpt_results',
+                 material = None):
         self.pdf_folder_name = pdf_folder_name
         self.result_folder_name = result_folder_name
         self.result_json_name = result_json_name
         self.result_dict = {}
         self.processed_pdf_list = []
+        self.material = material
 
     def load_existing_results(self):
         if os.path.exists(self.result_folder_name + '/'  + self.result_json_name + '.json'):
@@ -49,7 +53,7 @@ class PDFProcessor:
     @staticmethod
     def save_data_as_json(filename, data):
         with open(filename, 'w') as json_file:
-            json.dump(data, json_file, indent=4)
+            json.dump(data, json_file, indent=4, ensure_ascii=False)
 
     def pdf_to_base64_img_list(self, pdf_path, zoom_x=3.0, zoom_y=3.0):
         """
@@ -91,21 +95,29 @@ class PDFProcessor:
 
     def pdf_to_long_string(self, pdf_path, remove_references=True):
         document = fitz.open(pdf_path)
-        raw_text = ''
+        text = ''
         for page_num in range(len(document)):
             page = document.load_page(page_num)
-            raw_text += page.get_text()
+            text += page.get_text()
         document.close()
-        text = raw_text.replace("\n", " ").replace("\r", " ")
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'[^\w\s,.]', '', text)
-        cleaned_text = text.strip()
+        # text = raw_text.replace("\n", " ")
+        # text = raw_text.replace("\n", " ").replace("\r", " ")
+        # text = re.sub(r'\s+', ' ', text)
+        # text = re.sub(r'[^\w\s,.]', '', text)
+        # cleaned_text = text.strip()
         if remove_references:
-            cleaned_text = self.remove_references_section(cleaned_text)
-        return cleaned_text
+            text = self.remove_references_section(text)
+        return text
 
+    def replace_zeros_in_reactants_and_products(self, text):
+        def replacer(match):
+            return match.group(0).replace("0", "'")
 
-    def process_pdfs_img_txt(self, save_batch_size=3, material=None):
+        # 匹配 Reactants 和 Products 行，并替换 0
+        pattern = r"(Reactants: .*|Products: .*)"
+        return re.sub(pattern, replacer, text)
+
+    def process_pdfs_img_txt(self, save_batch_size=3):
 
         pdf_file_list = self.get_pdf_files(self.pdf_folder_name)
         pdf_name_list = [pdf.split('.pdf')[0] for pdf in pdf_file_list]
@@ -135,13 +147,12 @@ class PDFProcessor:
             # Extract the reaction first, then extract the property based on the reaction
             # extract reaction
             llm = GPTAPI()
-            prompt = prompts.reaction_prompt
+            prompt = prompts.prompt_reaction_extraction
             answer_reaction = llm.answer_w_vision_img_list_txt(prompt, base64_img_list, cleaned_text)
             # answer_reaction = llm.answer_wo_vision(prompt, cleaned_text)
             # extract property
             # prompt2 = prompts.property_prompt.format(reactions=answer_reaction)
             # answer_property = llm.answer_w_vision_img_list_txt(prompt2, base64_img_list, cleaned_text)
-            # todo:
             answer_property = ''
             self.result_dict[pdf_name] = (answer_reaction, answer_property)
             counter += 1
@@ -159,8 +170,7 @@ class PDFProcessor:
             reactions_txt += reactions
         return reactions_txt
 
-
-    def process_pdfs_txt(self, save_batch_size=3, material=None):
+    def process_pdfs_txt(self, save_batch_size=3):
 
         pdf_file_list = self.get_pdf_files(self.pdf_folder_name)
         pdf_name_list = [pdf.split('.pdf')[0] for pdf in pdf_file_list]
@@ -177,22 +187,29 @@ class PDFProcessor:
 
         os.makedirs(self.result_folder_name, exist_ok=True)
         counter = 0
+        reactions_txt = ''
         for pdf_path in tqdm(pdf_file_to_process):
             pdf_name = pdf_path.replace('.pdf', '')
             # base64_img_list = self.pdf_to_base64_img_list(os.path.join(self.pdf_folder_name, pdf_path))
             cleaned_text = self.pdf_to_long_string(os.path.join(self.pdf_folder_name, pdf_path))
             total_length = len(cleaned_text)
             print(f'Processing: {pdf_name}, TXT Length: {total_length}')
-            if total_length > 200000: # 93710
+            if total_length > 200000:
                 print(f'{pdf_name} Exceed maximum length, skip ...')
                 continue
-            llm = GPTAPI()
-            prompt = prompts.reaction_prompt
-            answer_reaction = llm.answer_wo_vision(prompt, cleaned_text)
+            llm = GPTAPI(temperature = 0.0)
+            # prompt = prompts.reaction_prompt
+            prompt_reaction_extract = prompts.prompt_reaction_extraction_cot # .format(substance=self.material)
+            ans_reaction = llm.answer_wo_vision(prompt_reaction_extract, cleaned_text)
+            ans_reaction = self.replace_zeros_in_reactants_and_products(ans_reaction)
             # prompt2 = prompts.property_prompt.format(reactions=answer_reaction)
             # answer_property = llm.answer_wo_vision(prompt2, cleaned_text)
             answer_property = ''
-            self.result_dict[pdf_name] = (answer_reaction, answer_property)
+            # self.result_dict[pdf_name] = (ans_reaction, answer_property)
+            reactions_txt += ('\n\n' + ans_reaction)
+            ans_reaction = ans_reaction.split("Final Output:")[-1].strip()
+            self.result_dict[pdf_name] = ans_reaction
+
             counter += 1
             if counter % save_batch_size == 0:
                 self.save_data_as_json(f"{self.result_folder_name}/{self.result_json_name}.json", self.result_dict)
@@ -204,9 +221,5 @@ class PDFProcessor:
         self.save_data_as_json(f"{self.result_folder_name}/{self.result_json_name}.json", self.result_dict)
         print(f"Saved result after processing all files.")
         # return self.result_dict
-        # reactions_txt = ''
-        # for key, value in self.result_dict.items():
-        #     reactions = value[0]
-        #     reactions_txt += (reactions + '\n\n')
-        # return reactions_txt
+        return reactions_txt
 

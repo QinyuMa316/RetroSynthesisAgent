@@ -1,36 +1,180 @@
+# Carefully analyze the provided text, using images as a supplementary reference. If there is a conflict between the image and text, prioritize the information from the text.
+# Ensure that the extracted reactions are interconnected: each subsequent reaction's reactants must include at least one product from the previous reaction. Continue this sequence until all reactants in the first reaction are common laboratory or commercially available substances.
 
-reaction_prompt = """
-Carefully analyze the provided text, using images as a supplementary reference. If there is a conflict between the image and text, prioritize the information from the text.
+# reaction_prompt = """
+# Extract all distinct chemical reactions mentioned within. Include each reaction only once, if it appears more than once.
+# Only extract reactions where all reactants and products are fully identified. Exclude any reaction if any reactant or product is unspecified.
+# Ensure that there are no identical substances among the reactants, products, catalysts, and solvents. If any identical substances are found, reconsider the validity of the reaction.
+#
+# Ensure to unify the substance name throughout.
+# Be meticulous not to alter the chemical names in a way that changes the identity of the substances.
+# Unify Nomenclature: For example, if you encounter "poly(4-acetylstyrene)" and "poly(4-acetyl styrene)" in the text, recognize that they refer to the same substance. Always use the unified name, "poly(4-acetylstyrene)," in your output.
+# Similarly, unify "poly(4-vinylphenol)," "poly(4-hydroxystyrene)," and "Polyvinylphenol" to a single name like "Polyhydroxystyrene."
+#
+# Format the output strictly as follows:
+#
+# Reaction 001:
+# Reactants: List the IUPAC nomenclatures, separated by commas.
+# Products: List the IUPAC nomenclatures, separated by commas.
+# Conditions: List the following in the exact order, separated by commas, skip any condition that is not provided or if it is unknown::
+# - If a synthesis method is provided, provide a professional term used to describe the reaction
+# - If a catalyst is provided, prefix with 'Catalyst: ' followed by the IUPAC nomenclatures.
+# - If a solvent is provided, prefix with 'Solvent: ' followed by the IUPAC nomenclatures.
+# - If an atmosphere is provided, prefix with 'Atmosphere: ' followed by the specified gas.
+# - For temperature, provide specific value or range with °C without any prefix.
+# - For pressure, provide specific value or range with atm or bar without any prefix.
+# - For duration, provide specific value or range with h or min or d without any prefix.
+# - For yield, provide specific value or range in % without any prefix.
+#
+# Do not include any explanatory notes, brackets, or additional information.
+# """
+#
+#
+# How can common laboratory and commercial chemical compounds be used to synthesize "{substance}" in one or more steps? Please provide all reactions based on the given content.
+#
+# - Confirm that the extracted reactions are interconnected: the reactants in each subsequent reaction must include at least one product from the previous reaction.
+#
+#
+# reaction_prompt_v4 = """
+# How can common laboratory and commercial chemical compounds be used to synthesize "{substance}" in one or more steps? Please provide all reactions based on the given content.
+#
+# You must strictly adhere to the following rules:
+# - Note that the given content contains multiple synthesis reactions for "{substance}". Ensure that all reactions are extracted without omission.
+# - Confirm that the extracted reactions are interconnected: the reactants in each subsequent reaction must include at least one product from the previous reaction.
+# - All names must strictly match the provided content without modification or interpretation. Maintain consistent naming of the substance throughout.
+# - Do not use general terms such as "Diamine" or "Dianhydride" to represent a class of substances;
+# - Do not use abbreviations for any substance names;
+# - Do not include any explanatory notes, brackets, or additional information.
+# - All names must be provided in their full specific forms.
+# - Be careful to ensure that solvents, catalysts, or other reaction conditions are not mistakenly listed as reactants. Reactants must only include compounds directly involved in the chemical transformation.
+#
+# Format the output strictly as follows:
+#
+# Initial Output:
+#
+# Reaction 001:
+# Reactants: List the substances with specific names, separated by commas.
+# Products: List the substances with specific names, separated by commas.
+# Conditions: List the following in the exact order, separated by commas, skipping any condition that is not provided or is unknown:
+# - If a catalyst is provided, prefix with "Catalyst: " followed by the substances with specific names.
+# - If a solvent is provided, prefix with "Solvent: " followed by the substances with specific names.
+# - If other non-reactive reagents are provided, such as drying agents, stabilizers, adsorbents, buffers, etc., prefix with their respective names (e.g., 'Drying agents: ', 'Stabilizers: ', 'Adsorbents: ', 'Buffers: ') followed by their specific types.
+# - If an atmosphere is provided, prefix with "Atmosphere: " followed by the specified gas in full names.
+# - For temperature, provide the specific value or range with °C without any prefix.
+# - For pressure, provide the specific value or range with atm or bar without any prefix.
+# - For duration, provide the specific value or range with h, min, or d without any prefix.
+# - For yield, provide the specific value or range in % without any prefix.
+#
+# Check whether any substance in the Reactants is commonly used as a solvent, catalyst, drying agent, stabilizer, adsorbent, buffer, etc. , move it to the conditions section
+# Check whether any general terms such as "Diamine" or "Dianhydride" are identified, recheck the content and modify it.
+# Document your checking process. Finally, re-output all the corrected reactions.
+#
+# Checking process:
+# - Reaction 001:
+#
+# Final Output:
+# """
 
-Extract all distinct chemical reactions mentioned within. Include each reaction only once, if it appears more than once.
+
+prompt_reaction_extraction_cot = """
+Extract all distinct chemical reactions from given content. Include each reaction only once, if it appears more than once.
 Only extract reactions where all reactants and products are fully identified. Exclude any reaction if any reactant or product is unspecified.
-Ensure that there are no identical substances among the reactants, products, catalysts, and solvents. If any identical substances are found, reconsider the validity of the reaction.
 
-Ensure that the extracted reactions are interconnected: each subsequent reaction's reactants must include at least one product from the previous reaction. Continue this sequence until all reactants in the first reaction are common laboratory or commercially available substances.
-
-Ensure to unify the substance name throughout.
-Be meticulous not to alter the chemical names in a way that changes the identity of the substances.
-Unify Nomenclature: For example, if you encounter "poly(4-acetylstyrene)" and "poly(4-acetyl styrene)" in the text, recognize that they refer to the same substance. Always use the unified name, "poly(4-acetylstyrene)," in your output. 
-Similarly, unify "poly(4-vinylphenol)," "poly(4-hydroxystyrene)," and "Polyvinylphenol" to a single name like "Polyhydroxystyrene."
+You must strictly adhere to the following rules:
+Confirm that the extracted reactions are interconnected: the reactants in each subsequent reaction must include at least one product from the previous reaction.
+Be careful to ensure that solvents, catalysts, or other reaction conditions are not mistakenly listed as reactants. Reactants must only include compounds directly involved in the chemical transformation.
+All names must be provided in their full specific forms:
+- Maintain consistent naming of each substance throughout.
+- Do not use general terms, such as "Diamine" or "Dianhydride," to represent a class of substances for any reactant substance name.
+- Do not use abbreviations for any substance name.
+- Do not include explanatory notes, brackets, or additional information.
 
 Format the output strictly as follows:
-'
-Reaction 001:
-Reactants: List the IUPAC nomenclatures, separated by commas.
-Products: List the IUPAC nomenclatures, separated by commas.
-Conditions: List the following in the exact order, separated by commas, skip any condition that is not provided or if it is unknown::
-- If a synthesis method is provided, provide a professional term used to describe the reaction
-- If a catalyst is provided, prefix with 'Catalyst: ' followed by the IUPAC nomenclatures.
-- If a solvent is provided, prefix with 'Solvent: ' followed by the IUPAC nomenclatures.
-- If an atmosphere is provided, prefix with 'Atmosphere: ' followed by the specified gas.
-- For temperature, provide specific value or range with °C without any prefix.
-- For pressure, provide specific value or range with atm or bar without any prefix.
-- For duration, provide specific value or range with h or min or d without any prefix.
-- For yield, provide specific value or range in % without any prefix.
 
-Do not include any explanatory notes, brackets, or additional information.
+Initial Output:
+
+Reaction 001:
+Reactants: List the substances with specific names, separated by commas.
+Products: List the substances with specific names, separated by commas.
+Conditions: List the following in the exact order, separated by commas, skipping any condition that is not provided or is unknown:
+- If a catalyst is provided, prefix with "Catalyst: " followed by the substances with specific names.
+- If a solvent is provided, prefix with "Solvent: " followed by the substances with specific names.
+- If other non-reactive reagents are provided, such as drying agents, stabilizers, adsorbents, buffers, etc., prefix with their respective names (e.g., 'Drying agents: ', 'Stabilizers: ', 'Adsorbents: ', 'Buffers: ') followed by their specific types.
+- If an atmosphere is provided, prefix with "Atmosphere: " followed by the specified gas in full names.
+- For temperature, provide the specific value or range with °C without any prefix.
+- For pressure, provide the specific value or range with atm or bar without any prefix.
+- For duration, provide the specific value or range with h, min, or d without any prefix.
+- For yield, provide the specific value or range in % without any prefix.
+
+Check whether any substance in the Reactants is commonly used as a solvent, catalyst, drying agent, stabilizer, adsorbent, buffer, etc.  
+Document your checking process. If such a substance is identified, move it to the conditions section. Finally, re-output all the corrected reactions.
+
+Checking Process:
+- For Reaction 001:
+
+Final Output:
+
 """
 
+
+prompt_reaction_extraction = """
+Extract all distinct chemical reactions from given content. Include each reaction only once, if it appears more than once.
+Only extract reactions where all reactants and products are fully identified. Exclude any reaction if any reactant or product is unspecified.
+
+You must strictly adhere to the following rules:
+Confirm that the extracted reactions are interconnected: the reactants in each subsequent reaction must include at least one product from the previous reaction.
+Be careful to ensure that solvents, catalysts, or other reaction conditions are not mistakenly listed as reactants. Reactants must only include compounds directly involved in the chemical transformation.
+All names must be provided in their full specific forms:
+- Maintain consistent naming of each substance throughout.
+- Do not use general terms, such as "Diamine" or "Dianhydride," to represent a class of substances for any reactant substance name.
+- Do not use abbreviations for any substance name.
+- Do not include explanatory notes, brackets, or additional information.
+
+Format the output strictly as follows:
+
+Reaction 001:
+Reactants: List the substances with specific names, separated by commas.
+Products: List the substances with specific names, separated by commas.
+Conditions: List the following in the exact order, separated by commas, skipping any condition that is not provided or is unknown:
+- If a catalyst is provided, prefix with "Catalyst: " followed by the substances with specific names.
+- If a solvent is provided, prefix with "Solvent: " followed by the substances with specific names.
+- If other non-reactive reagents are provided, such as drying agents, stabilizers, adsorbents, buffers, etc., prefix with their respective names (e.g., 'Drying agents: ', 'Stabilizers: ', 'Adsorbents: ', 'Buffers: ') followed by their specific types.
+- If an atmosphere is provided, prefix with "Atmosphere: " followed by the specified gas in full names.
+- For temperature, provide the specific value or range with °C without any prefix.
+- For pressure, provide the specific value or range with atm or bar without any prefix.
+- For duration, provide the specific value or range with h, min, or d without any prefix.
+- For yield, provide the specific value or range in % without any prefix.
+"""
+
+
+prompt_reaction_evaluation = """
+Reactions:
+{reactions}
+
+Check whether any substance in the Reactants is commonly used as a solvent, catalyst, drying agent, stabilizer, adsorbent, buffer, etc.  
+Document your checking process. If such a substance is identified, move it to the conditions section. Finally, re-output all the corrected reactions. Ensure the number of reactions in the output matches the original.
+
+Format the output strictly as follows:
+
+Checking process:
+- Reaction 001: Describe your process for identifying and reassigning any substances to the conditions section.
+
+Final Output:
+
+Reaction 001:
+Reactants: List the substances with specific names, separated by commas.
+Products: List the substances with specific names, separated by commas.
+Conditions: List the following in the exact order, separated by commas, skipping any condition that is not provided or is unknown:
+- If a catalyst is provided, prefix with "Catalyst: " followed by the substances with specific names.
+- If a solvent is provided, prefix with "Solvent: " followed by the substances with specific names.
+- If other non-reactive reagents are provided, such as drying agents, stabilizers, adsorbents, buffers, etc., prefix with their respective names (e.g., 'Drying agents: ', 'Stabilizers: ', 'Adsorbents: ', 'Buffers: ') followed by their specific types.
+- If an atmosphere is provided, prefix with "Atmosphere: " followed by the specified gas in full names.
+- For temperature, provide the specific value or range with °C without any prefix.
+- For pressure, provide the specific value or range with atm or bar without any prefix.
+- For duration, provide the specific value or range with h, min, or d without any prefix.
+- For yield, provide the specific value or range in % without any prefix.
+
+"""
 
 prompt_align_root_node = """
 For the given reactions, check if any substances are different names for the same entity as "{substance}". If so, standardize all names to "{substance}". 
@@ -62,12 +206,15 @@ Example Output:
 Different names for the same substance: Benzophenonetetracarboxylic dianhydride, Benzophenone tetracarboxylic dianhydride
 Standardized name: Benzophenone tetracarboxylic dianhydride
 
-Different names for the same substance: 4,4'-Oxydianiline, 4,4'-Diaminodiphenyl ether
-Standardized name: 4,4'-Oxydianiline
+Different names for the same substance: 2,2-bis(3',4'-dicarboxyphenyl)hexafluoropropane dianhydride, 2,2-bis(3,4-dicarboxyphenyl)hexafluoropropane dianhydride
+Standardized name: 2,2-bis(3,4-dicarboxyphenyl)hexafluoropropane dianhydride
+
+Different names for the same substance:  4,4′-(hexafluoro-isopropylidene) diphthalic anhydride, hexafluoroisopropylidene diphthalic anhydride
+Standardized name: hexafluoroisopropylidene diphthalic anhydride
 """
 
 
-prompt_add_reactions_from_lits_template = """
+prompt_add_reactions_from_literature = """
 Please answer the questions based on the given content.
 How to use common laboratory and commercial chemical compounds to synthesize "{material}" in one or more steps? Please provide the reactions.
 
@@ -83,6 +230,7 @@ Conditions: List the following in the exact order, separated by commas, skip any
 - If a synthesis method is provided, provide a professional term used to describe the reaction
 - If a catalyst is provided, prefix with 'Catalyst: ' followed by the IUPAC nomenclatures.
 - If a solvent is provided, prefix with 'Solvent: ' followed by the IUPAC nomenclatures.
+- If other non-reactive reagents are provided, such as drying agents, stabilizers, adsorbents, buffers, etc., prefix with their respective names (e.g., 'Drying agents: ', 'Stabilizers: ', 'Adsorbents: ', 'Buffers: ') followed by their specific types.
 - If an atmosphere is provided, prefix with 'Atmosphere: ' followed by the specified gas.
 - For temperature, provide specific value or range with °C without any prefix.
 - For pressure, provide specific value or range with atm or bar without any prefix.
@@ -93,25 +241,82 @@ Do not include any explanatory notes, brackets, or additional information.
 """
 
 
-filter_reactions_prompt_template = """
-Given the following reactions, please filter them according to these conditions:
+prompt_add_reactions_from_literature_cot = """
+Please answer the questions based on the given content.
+How to use common laboratory and commercial chemical compounds to synthesize "{material}" in one or more steps? Please provide the reactions.
+
+You must strictly adhere to the following rules:
+Confirm that the extracted reactions are interconnected: the reactants in each subsequent reaction must include at least one product from the previous reaction.
+Be careful to ensure that solvents, catalysts, or other reaction conditions are not mistakenly listed as reactants. Reactants must only include compounds directly involved in the chemical transformation.
+All names must be provided in their full specific forms:
+- Maintain consistent naming of each substance throughout.
+- Do not use general terms, such as "Diamine" or "Dianhydride," to represent a class of substances for any reactant substance name.
+- Do not use abbreviations for any substance name.
+- Do not include explanatory notes, brackets, or additional information.
+
+Format the output strictly as follows:
+
+Initial Output:
+
+Reaction 001:
+Reactants: List the substances with specific names, separated by commas.
+Products: List the substances with specific names, separated by commas.
+Conditions: List the following in the exact order, separated by commas, skipping any condition that is not provided or is unknown:
+- If a catalyst is provided, prefix with "Catalyst: " followed by the substances with specific names.
+- If a solvent is provided, prefix with "Solvent: " followed by the substances with specific names.
+- If other non-reactive reagents are provided, such as drying agents, stabilizers, adsorbents, buffers, etc., prefix with their respective names (e.g., 'Drying agents: ', 'Stabilizers: ', 'Adsorbents: ', 'Buffers: ') followed by their specific types.
+- If an atmosphere is provided, prefix with "Atmosphere: " followed by the specified gas in full names.
+- For temperature, provide the specific value or range with °C without any prefix.
+- For pressure, provide the specific value or range with atm or bar without any prefix.
+- For duration, provide the specific value or range with h, min, or d without any prefix.
+- For yield, provide the specific value or range in % without any prefix.
+
+Check whether any substance in the Reactants is commonly used as a solvent, catalyst, drying agent, stabilizer, adsorbent, buffer, etc.  
+Document your checking process. If such a substance is identified, move it to the conditions section. Finally, re-output all the corrected reactions.
+
+Checking Process:
+- For Reaction 001:
+
+Final Output:
+
+"""
+
+
+prompt_reactions_filtration = """
+Reactions:
+{reactions}
+
+Given Reactions, please filter them according to these conditions:
 1. Exclude reactions that lack any reaction conditions.
-2. Exclude reactions with high reaction temperatures > 200 °C.
+2. Exclude reactions with high reaction temperatures > 350 °C.
 3. Exclude reactions with high reaction pressure > 2 atm.
 4. Exclude reactions involving difficult-to-source catalysts.
 5. Exclude reactions involving difficult-to-source solvents
 6. Exclude reactions involving toxic substances or those that produce toxic byproducts.
 
-Reactions:
-{reactions}
-
 Format the output strictly as follows:
 
 Excluded Reactions:
-Reaction idx, Reason: ...
+Reaction idx: [idx], Reason: ...
 
 Remaining Reactions:
-Reaction idx
+Reaction idx: [idx]
+"""
+
+prompt_filter_pathway = """
+Please evaluate the following reaction pathways one by one to determine their validity. If a pathway is not valid, remove it and explain why.
+
+Reaction Pathways:
+{all_pathways}
+
+Format the output strictly as follows:
+
+Excluded Reaction Pathways:
+Pathway: List reaction indices in order (e.g., idx4, idx7, idx3)
+Reason: Provide a concise explanation for why the pathway is not valid.
+
+Remaining Reaction Pathways:
+Pathway: List remaining valid reaction indices in order (e.g., idx4, idx7, idx3)
 """
 
 
@@ -158,8 +363,7 @@ Reasons:
 Explain the rationale for selecting this pathway over other alternatives, focusing on its advantages in mildness, cost, scalability, or safety.
 """
 
-
-recommend_prompt_template_cost_v2 = """
+recommend_prompt_template_cost = """
 Given the target product "{substance}", 
 please analyze and recommend the reaction pathway that results in the lowest reactant cost by following these structured steps:
 
@@ -200,7 +404,7 @@ Explain the rationale for selecting this pathway over other alternatives, focusi
 """
 # After listing all temperatures and pressures, analyze each pathway comprehensively to evaluate the mildness of reaction conditions, considering only temperature and pressure.
 
-recommend_prompt_template_condition_v2 = """
+recommend_prompt_template_condition = """
 Given the target product "{substance}", 
 please analyze and recommend the reaction pathway that has the mildest reaction conditions by following these structured steps:
 
@@ -239,53 +443,57 @@ Explain the rationale for selecting this pathway over other alternatives, focusi
 """
 
 recommend_prompt_template_specific_substance = """
-Given the target product "{substance}", 
-please analyze and recommend the most optimal reaction pathway that includes "{initial_reactant}" as one of the initial reactants by following these structured steps:
-
-1. Pathways Identification and Analysis
-List all reaction pathways from "Reaction Pathways" that include {initial_reactant} as an initial reactant.
-After listing all relevant pathways, analyze the reaction conditions comprehensively to determine the optimal pathway, considering factors such as mild temperature and pressure requirements, reaction duration, yield, and accessibility of initial reactants and so on.
-
 Reaction Pathways:
 {all_pathways}
 
-Response Format:
+Please analyze and recommend the most optimal reaction pathways that includes "{initial_reactant}" as one of the initial reactants.
 
-Identification:
+List all reaction pathways from "Reaction Pathways" that include "{initial_reactant}" as an initial reactant.
+After listing all relevant pathways, analyze the reaction conditions comprehensively to determine the optimal pathway, considering factors such as mild temperature and pressure requirements, reaction duration, yield, and accessibility of initial reactants and so on.
 
-Pathway: List reaction indices (e.g., idx4, idx7, idx3) where acetophenone is an initial reactant.
-Condition Analysis:
+Format the output strictly as follows:
+
+Analysis:
+Pathway: List reaction indices (e.g., idx4, idx7, idx3)
+Condition:
 
 Recommended Reaction Pathway: List reaction indices (e.g., idx4, idx7, idx3).
 
 Reaction idx: Specify the reaction index.
-Reactants: List the IUPAC nomenclatures, separated by commas.
-Products: List the IUPAC nomenclatures, separated by commas.
+Reactants: List the substances with specific names, separated by commas.
+Products: List the substances with specific names, separated by commas.
 Conditions: List conditions in specified order; skip if unknown.
 Source: Source literature name.
 
 Repeat for each step in the chosen pathway.
 
 Reasons:
-Explain the rationale for selecting this pathway over other alternatives, focusing solely on its advantages in terms of reaction conditions.
+Explain the rationale for selecting this pathway over other alternatives.
 """
 
-
-
-
-filter_pathway_prompt_template = """
-Please evaluate the following reaction pathways one by one to determine their validity. If a pathway is not valid, remove it and explain why.
-
+recommend_prompt_commercial = """
 Reaction Pathways:
 {all_pathways}
 
+Please analyze and recommend the reaction pathways used to manufacture commercially available Katpon polyimide.
 
 Format the output strictly as follows:
 
-Excluded Reaction Pathways:
-Pathway: List reaction indices in order (e.g., idx4, idx7, idx3)
-Reason: Provide a concise explanation for why the pathway is not valid.
+Recommended Reaction Pathway: List reaction indices (e.g., idx4, idx7, idx3).
 
-Remaining Reaction Pathways:
-Pathway: List remaining valid reaction indices in order (e.g., idx4, idx7, idx3)
+Reaction idx: Specify the reaction index.
+Reactants: List the substances with specific names, separated by commas.
+Products: List the substances with specific names, separated by commas.
+Conditions: List conditions in specified order; skip if unknown.
+Source: Source literature name.
+
+Repeat for each step in the chosen pathway.
+
+Reasons:
+Explain the rationale for selecting this pathway over other alternatives.
 """
+
+
+
+
+

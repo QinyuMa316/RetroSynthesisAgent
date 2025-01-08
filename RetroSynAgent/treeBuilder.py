@@ -4,18 +4,15 @@ from graphviz import Digraph
 import time
 import pubchempy
 import pickle
-import base64
-from io import BytesIO
-from PIL import Image
 import os
 import re
-from tqdm import tqdm
 from collections import deque
-import concurrent.futures
-
 class CommonSubstanceDB:
     def __init__(self):
         self.added_database = self.get_added_database()
+        self.smiles_cache = self.load_dict_from_json("smiles_cache.json")
+        self.common_sub_cache = self.load_dict_from_json("substance_query_result.json")
+
     @staticmethod
     def read_data_from_json(filename):
         with open(filename, 'r', encoding='utf-8') as file:
@@ -49,46 +46,51 @@ class CommonSubstanceDB:
 
         polymers = [polymer.lower() for polymer in polymers]
         emol_list = self.read_data_from_json('RetroSynAgent/emol.json')
-        added_database = set(emol_list) | {"CCl2"} | set(polymers)
+        added_database = set(emol_list) | set(polymers) | {"2-chlorotrifluoromethylbenzene"}
         return added_database
 
     def is_common_chemical(self, compound_name, max_retries=1, delay=1):
-        """
-        Query the PubChem database to determine if a compound is common; retry on error.
-        :param compound_identifier: The compound's SMILES, English name, or other identifier (string)
-        :param max_retries: Maximum number of retries
-        :param delay: Wait time between retries (seconds)
-        :return: Returns True if a relevant record is found, otherwise returns False
-        """
-        compound_identifier = self.get_smiles_from_name(compound_name)
+        compound_identifier = self.get_smiles_cached(compound_name)
         retries = 0
         while retries < max_retries:
             try:
                 if compound_identifier in self.added_database:
                     print(f"{compound_identifier} query succeed in emol or added db")
                     return True
-                # Query the compound by SMILES
                 compound = pubchempy.get_compounds(compound_identifier, 'smiles')
                 if not compound:
-                    # If SMILES query fails, try querying by name
                     compound = pubchempy.get_compounds(compound_identifier, 'name')
                 if compound:
                     print(f"{compound_identifier} query succeed in pubchem")
                     return True
                 return False
             except pubchempy.PubChemHTTPError as e:
-                # print(f"{compound_identifier} query failed: {e}. Retrying... ({retries + 1}/{max_retries})")
                 retries += 1
                 time.sleep(delay)
             except Exception as e:
                 print(f"other error: {e}")
-                # Other error: <urlopen error [Errno 54] Connection reset by peer>
-        # print(f"{compound_identifier} query failed")  # Maximum number of retries reached
         return False
+
+    def get_smiles_cached(self, compound_name):
+        if compound_name in self.smiles_cache:
+            return self.smiles_cache[compound_name]
+        smiles = self.get_smiles_from_name(compound_name)
+        self.smiles_cache[compound_name] = smiles
+        self.save_dict_as_json(self.smiles_cache, "smiles_cache.json")
+        return smiles
+
+    def is_common_chemical_cached(self, compound_name):
+        if compound_name in self.common_sub_cache:
+            return self.common_sub_cache[compound_name]
+        result = self.is_common_chemical(compound_name)
+        self.common_sub_cache[compound_name] = result
+        self.save_dict_as_json(self.common_sub_cache)
+        return result
+
 
     @staticmethod
     def get_smiles_from_name(identifier):
-        smiles_pattern = re.compile(r'^[A-Za-z0-9@+\-#\(\)\\/\=\[\]\.\%\:\?]*$')
+        smiles_pattern = re.compile(r'^[A-Za-z0-9@+\-#\(\)\\/\=\[\]\.%\:?]*$')
         if smiles_pattern.match(identifier):
             return identifier
 
@@ -98,47 +100,42 @@ class CommonSubstanceDB:
         else:
             return identifier
 
+    def load_dict_from_json(self, filename):
+        if os.path.exists(filename):
+            with open(filename, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            return {}
+
+    def save_dict_as_json(self, dict_file, filename="substance_query_result.json"):
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(dict_file, f, ensure_ascii=False, indent=4)
 
 class Node:
     def __init__(self, substance, reactions, product_dict,
                  fathers_set=None, father=None, reaction_index=None,
                  reaction_line=None, cache_func=None, unexpandable_substances=None,
-                 smiles_converter=None):  # , visited_substances=None):
-        '''
-        reaction_index: Index of the reaction that produces the substance: idx (str)
-        substance: The name of the current node: name (str)
-        children: List of child nodes: [Node, ...]
-        fathers_set: Set of parent node names: set(name (str), name (str))
-        reaction_line: Reaction path: [idx (str), ...]
-        brothers: Sibling nodes: [None, ...]
-        '''
+                 # smiles_converter=None
+                 ):
         self.reaction_index = reaction_index
         self.substance = substance
         self.children = []
         self.fathers_set = fathers_set if fathers_set is not None else set()
-        self.father = father  # father_node
+        self.father = father
         self.reaction_line = reaction_line if reaction_line is not None else []
         self.is_leaf = False
-        self.cache_func = cache_func  # Add caching function
+        self.cache_func = cache_func
         self.reactions = reactions
         self.product_dict = product_dict
         self.unexpandable_substances = unexpandable_substances
-        self.smiles_converter = smiles_converter
-        # self.visited_substances = visited_substances
+        # self.smiles_converter = smiles_converter
 
     def add_child(self, substance: str, reaction_index: int):
-        '''
-        Add a child node to the current node (self) in self.children
-        child: The name of the current child node: substance
-        Current child's parent set: curr_child_fathers_set = Current node (current child's parent) self + current node's parent set
-        Current child's reaction path: curr_child_reaction_line = idx from current node to current child + current node's reaction path
-        '''
-        # Convert substance name to SMILES
-
         curr_child_fathers_set = copy.deepcopy(self.fathers_set)
         curr_child_fathers_set.add(self.substance)
         curr_child_reaction_line = copy.deepcopy(self.reaction_line) + [reaction_index]
-        child = Node(self.smiles_converter(substance),
+        # child = Node(self.smiles_converter(substance),
+        child = Node(substance,
                      self.reactions, self.product_dict,
                      fathers_set=curr_child_fathers_set,
                      father=self,
@@ -146,10 +143,11 @@ class Node:
                      reaction_line=curr_child_reaction_line,
                      cache_func=self.cache_func,
                      unexpandable_substances=self.unexpandable_substances,
-                     smiles_converter=self.smiles_converter
+                     # smiles_converter=self.smiles_converter
                      )
         self.children.append(child)
         return child
+
 
     def remove_child_by_reaction(self, reaction_index: int):
         """
@@ -157,6 +155,8 @@ class Node:
         This not only deletes the current child node but also deletes sibling nodes with the same reaction (same reaction index)
         """
         self.children = [child for child in self.children if child.reaction_index != reaction_index]
+
+
 
     def expand(self) -> bool:
         """
@@ -167,15 +167,13 @@ class Node:
         # The reactant already belongs to existing reactants, no need to expand further
         # if self.substance in init_reactants:
         if self.cache_func(self.substance):
-            print(f'{self.substance} query succeed.')
-            time.sleep(0.3)
             self.is_leaf = True
             # self.visited_substances[self.substance] = True
             # print(f"{self.substance} is accessible")
             return True
         else:
-            print(f'{self.substance} query failed.')
-            time.sleep(0.3)
+            # print(f'{self.substance} query failed.')
+            # time.sleep(0.1)
             reactions_idxs = self.product_dict.get(self.substance, [])
             # The substance cannot be obtained through existing reactions
             if len(reactions_idxs) == 0:
@@ -199,13 +197,18 @@ class Node:
                         if child.substance in child.fathers_set:
                             self.remove_child_by_reaction(reaction_idx)
                             break
+                            # child.is_leaf = False
+                            # continue
                         # (2) If the current child node cannot be expanded further (1 cannot be expanded to initial reactants 2 cannot be obtained through existing reactions)
                         # Recursively check if the current child can expand further
                         is_valid = child.expand()  # , init_reactants)
                         # Cannot expand
                         if not is_valid:
-                            self.remove_child_by_reaction(reaction_idx)
-                            break
+                            # self.remove_child_by_reaction(reaction_idx)
+                            # break
+                            child.is_leaf = False
+                            continue
+
                 # After checking all reactions that can produce the substance, if "1" all children are invalid (no valid child nodes), cannot synthesize this substance
                 if len(self.children) == 0:
                     # self.visited_substances[self.substance] = False
@@ -215,23 +218,8 @@ class Node:
                     # self.visited_substances[self.substance] = True
                     return True
 
-
-# retrosynthetic Tree, contains all substance nodes
 class Tree:
     def __init__(self, target_substance, result_dict=None, reactions_txt=None, reactions=None):
-        """
-        reactions_dict[str(idx)] = {
-            'reactants': tuple(reactants),
-            'products': tuple(products),
-            'conditions': conditions, }
-        """
-        # if reactions:
-        #     self.reactions_wo_alg = reactions
-        # elif result_dict:
-        #     self.reactions_wo_alg, self.reactions_txt = self.parse_results(result_dict)
-        # elif reactions_txt:
-        #     self.reactions_wo_alg = self.parse_reactions_txt(reactions_txt)
-        # self.reactions = self.entityAlignment(self.reactions_wo_alg)
         if reactions:
             self.reactions = reactions
         elif result_dict:
@@ -240,52 +228,26 @@ class Tree:
             self.reactions = self.parse_reactions_txt(reactions_txt)
         self.product_dict = self.get_product_dict(self.reactions)
         self.target_substance = target_substance
-        # self.root = Node(target_substance)
         self.reaction_infos = set()
         self.all_path = []
         self.db = CommonSubstanceDB()
-        self.chemical_cache = self.load_dict_from_json()  # Used to record whether a substance can be queried in the database
-        self.unexpandable_substances = set()  # Set of nodes that cannot be expanded
-        # self.visited_substances = {}  # Records the substances visited and their expansion results
-        # Create the root node and pass the cache query method, and the set of non-expandable nodes
+        # self.chemical_cache = self.load_dict_from_json("substance_query_result.json")
+        # self.smiles_cache = self.load_dict_from_json("smiles_cache.json")
+        self.unexpandable_substances = set()
         self.root = Node(target_substance, self.reactions, self.product_dict,
-                         cache_func=self.is_common_chemical_cached,
+                         cache_func=self.db.is_common_chemical_cached,
                          unexpandable_substances=self.unexpandable_substances,
-                         smiles_converter=self.db.get_smiles_from_name
+                         # smiles_converter=self.db.get_smiles_cached
                          )
 
-    # def process_entry(self, args):
-    #     key, entry = args
-    #     try:
-    #         entry['reactants'] = [self.db.get_smiles_from_name(reactant) for reactant in entry['reactants']]
-    #     except Exception as e:
-    #         # 记录错误信息，防止异常传播到主进程
-    #         print(f"Error processing {key}: {e}")
-    #     return key, entry
-    #
-    # def entityAlignment(self, reactions):
-    #     reactions_items = list(reactions.items())
-    #     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    #         results = list(tqdm(executor.map(self.process_entry, reactions_items),
-    #                             total=len(reactions_items),
-    #                             desc="Align Entities .."))
-    #
-    #     reactions_alg = dict(results)
-    #     return reactions_alg
+    def construct_tree(self):
+        self.root.expand()
+        return self.root
 
     def get_product_dict(self, reactions_dict):
-        '''
-        reactions_dict[str(idx)] = {
-            'reactants': tuple(reactants),
-            'products': tuple(products),
-            'conditions': conditions,
-        }
-        '''
         product_dict = {}
-        # Iterate over reactions_entry dictionary
         for idx, entry in reactions_dict.items():
             products = entry['products']
-            # Iterate over products
             for product in products:
                 product = product.strip()
                 if product not in product_dict:
@@ -358,132 +320,50 @@ class Tree:
         reactions_txt_all = ''
         reactions = {}
         idx = 1
-        for pdf_name, (reaction, property) in result_dict.items():
+        # for pdf_name, (reaction, property) in result_dict.items():
+        for pdf_name, reaction in result_dict.items():
             reactions_txt_all += (reaction + '\n\n')
+
             additional_reactions, idx = self.parse_reactions(reaction, idx, pdf_name)
             reactions.update(additional_reactions)
         return reactions, reactions_txt_all
 
-    def save_dict_as_json(self, dict_file, filename="substance_query_result.json"):
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(dict_file, f, ensure_ascii=False, indent=4)
 
-    def load_dict_from_json(self, filename="substance_query_result.json"):
-        if os.path.exists(filename):
-            with open(filename, 'r', encoding='utf-8') as f:
-                dict_file = json.load(f)
-                return dict_file
-        else:
-            return {}
+    # def is_common_chemical_cached(self, compound_name):
+    #     if compound_name in self.chemical_cache:
+    #         return self.chemical_cache[compound_name]
+    #     result = self.db.is_common_chemical(compound_name)
+    #     self.chemical_cache[compound_name] = result
+    #     self.save_dict_as_json(self.chemical_cache)
+    #     return result
+    #
+    # def get_smiles_cached(self, compound_name):
+    #     if compound_name in self.smiles_cache:
+    #         return self.smiles_cache[compound_name]
+    #     smiles = self.db.get_smiles_from_name(compound_name)
+    #     self.smiles_cache[compound_name] = smiles
+    #     self.save_dict_as_json(self.smiles_cache, "smiles_cache.json")
+    #     return smiles
+    #
+    # def load_dict_from_json(self, filename):
+    #     if os.path.exists(filename):
+    #         with open(filename, 'r', encoding='utf-8') as f:
+    #             return json.load(f)
+    #     else:
+    #         return {}
+    #
+    # def save_dict_as_json(self, dict_file, filename="substance_query_result.json"):
+    #     with open(filename, 'w', encoding='utf-8') as f:
+    #         json.dump(dict_file, f, ensure_ascii=False, indent=4)
 
-    def is_common_chemical_cached(self, compound_name):
-        """Use cache to avoid redundant compound queries"""
-        if compound_name in self.chemical_cache:
-            return self.chemical_cache[compound_name]
-        result = self.db.is_common_chemical(compound_name)
-        self.chemical_cache[compound_name] = result
-        self.save_dict_as_json(self.chemical_cache)
-        return result
-
-    def construct_tree(self): # , init_reactants):
-        # global init_reactants
-        # if self.root.substance in init_reactants:
-        #     raise ValueError("Target substance is already in initial reactants.")
-
-        if self.is_common_chemical_cached(self.root.substance):
-            raise ValueError("Target substance is easily gotten.")
-            # return ("Target substance is easily gotten.")
-        result = self.root.expand()
-        if result:
-            return True # "Build tree successfully!"
-        else:
-            return False # "Failed to build tree."
-
-    def get_name(self, node):
-        # If it is the root node
-        if node.reaction_index is None:
-            return node.substance
-        else:
-            depth = str(len(node.fathers_set))
-            return (depth+ "-" + node.substance+ "-" + '.'.join(map(str, list(node.reaction_line))))
-
-    def add_nodes_edges(self, node, dot=None, simple = False):
-        # If it is the root node
-        if dot is None:
-            if len(node.children) == 0:
-                raise Exception("Empty tree!")
-            # dot = Digraph(comment='Substances Tree', graph_attr={'rankdir': 'LR', 'dpi': '1000'})
-            dot = Digraph(comment='Substances Tree', graph_attr={'rankdir': 'LR', 'dpi': '1000', 'splines': 'true'})
-
-            # lightblue2
-            dot.attr('node', shape='ellipse', style='filled', color='lightblue2', fontname="Arial", fontsize="8")
-            dot.attr('edge', color='gray', fontname="Arial", fontsize="8")
-            if simple:
-                dot.node(name=self.get_name(node), label='', width='0.1', height='0.1')
-            else:
-                dot.node(name=self.get_name(node), label=node.substance)
-
+    def _count_nodes(self, node):
+        count = 1
         for child in node.children:
-            if simple:
-                dot.node(name=self.get_name(child), label='', width='0.1', height='0.1')
-                dot.edge(self.get_name(node), self.get_name(child), label='', arrowhead='none')
-            else:
-                dot.node(name=self.get_name(child), label=child.substance, width='0.1', height='0.1')
-                dot.edge(self.get_name(node), self.get_name(child), label=f"idx : {str(child.reaction_index)}", arrowhead='none')
+            count += self._count_nodes(child)
+        return count
 
-            dot = self.add_nodes_edges(child, dot=dot, simple=simple)
-            # reaction_info = f"reaction idx: {str(child.reaction_index)}, conditions: {self.reactions[child.reaction_index]['conditions']}"
-            reaction_info = str(child.reaction_index)
-            self.reaction_infos.add(reaction_info)
-        return dot
-
-    def get_name_level_order(self, node):
-        if node.reaction_index is None:
-            return node.substance
-        else:
-            depth = str(len(node.fathers_set))
-            # note: v13 return f"{depth}-{node.substance}" -> f"{depth}-{node.substance}-{node.father.node}"
-            return f"{depth}-{node.substance}-{node.father.substance}"
-
-    def add_nodes_edges_level_order2(self, node, dot=None, simple=False):
-        # If it is the root node
-        if dot is None:
-            if len(node.children) == 0:
-                raise Exception("Empty tree!")
-            dot = Digraph(comment='Substances Tree', graph_attr={'rankdir': 'LR'})
-            # dot.attr(overlap='false', ranksep='0.5', nodesep='1')
-            dot.attr('node', shape='ellipse', style='filled', fillcolor='#82b0d2', color='#999999', fontname="Arial", fontsize="8")
-            dot.attr('edge', color='#999999', fontname="Arial", fontsize="8")
-            root_fillcolor = '#beb8dc' # 紫色
-            dot.node(name=self.get_name_level_order(node), label='' if simple else node.substance, width='0.1', height='0.1', fillcolor=root_fillcolor)
-
-        queue = deque([node])
-        while queue:
-            level_nodes = []
-            level_edges = []
-            for _ in range(len(queue)):
-                cur_node = queue.popleft()
-                if cur_node.reaction_index is not None:
-                    edge_name = (self.get_name_level_order(cur_node.father) + self.get_name_level_order(cur_node))
-                    # 遍历每层节点，如果未添加则添加
-                    if edge_name not in level_edges:
-                        # label=f"idx : {str(cur_node.reaction_index)}"
-                        dot.edge(self.get_name_level_order(cur_node.father), self.get_name_level_order(cur_node), label=f"", arrowhead='none')
-                        level_edges.append(edge_name)
-
-                        reaction_info = str(cur_node.reaction_index)
-                        self.reaction_infos.add(reaction_info)
-
-                    # 判断当前节点是否为叶子节点
-                    node_name = cur_node.substance
-                    node_color = '#8ecfc9' if cur_node.is_leaf else '#82b0d2'  # 根据条件设定颜色
-                    if node_name not in level_nodes:
-                        dot.node(name=self.get_name_level_order(cur_node), label='' if simple else cur_node.substance, width='0.1', height='0.1', fillcolor=node_color)
-                        level_nodes.append(node_name)
-
-                for child in cur_node.children:
-                    queue.append(child)
-        return dot
+    def get_node_count(self):
+        return self._count_nodes(self.root)
 
     def get_reactions_in_tree_(self, reaction_idx_list):
         reactions_tree = ''
@@ -497,32 +377,23 @@ class Tree:
             reactions_tree += reaction_string
         return reactions_tree
 
-    def png_to_base64(self, png_path):
-        # Open the PNG image file
-        with Image.open(png_path) as image:
-            # Create a byte stream object
-            buffered = BytesIO()
-            # Save the image to the byte stream in PNG format
-            image.save(buffered, format="PNG")
-            # Get the binary content of the byte stream and encode it as Base64
-            base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        return base64_image
 
-    def get_reactions_in_tree(self, view=False, simple=False, dpi='500', img_suffix=''):
+    def get_reactions_in_tree(self):
+        """
+        Traverse the retrosynthetic tree directly and collect all reactions involved.
+        Returns a formatted string of all reactions in the tree.
+        """
+        reaction_idx_set = set()
 
-        dot = self.add_nodes_edges_level_order2(self.root, simple=simple)
-        dot.attr(dpi=dpi)
-        dot.render(filename=str(self.target_substance) + img_suffix, format='png', view=view)
-        # tree_base64_image = self.png_to_base64(str(self.target_substance) + img_suffix + '.png')
-        # return tree_base64_image
+        def traverse(node):
+            if node.reaction_index is not None:
+                reaction_idx_set.add(node.reaction_index)
+            for child in node.children:
+                traverse(child)
 
-        # Extract the relevant reactions from all_reactions_txt based on the idx involved in the tree
-        # reactions_tree: all reactions(idx, reactants, products, conditions) in the tree
-        reaction_idx_list = list(self.reaction_infos)
-        reactions_tree = self.get_reactions_in_tree_(reaction_idx_list)
-        return reactions_tree #, tree_base64_image
-
-
+        traverse(self.root)
+        reactions_tree = self.get_reactions_in_tree_(list(reaction_idx_set))
+        return reactions_tree
 
     def find_all_paths(self):
         """
@@ -610,6 +481,136 @@ class Tree:
                 result.append(data[i])
 
         return result
+
+    # def _collect_non_leaf_nodes(self, node):
+    #     non_leaf_nodes = []
+    #     if not node.is_leaf:
+    #         non_leaf_nodes.append(node.substance)  # 假设节点有一个 `name` 属性
+    #     for child in node.children:
+    #         non_leaf_nodes.extend(self._collect_non_leaf_nodes(child))
+    #     return non_leaf_nodes
+    #
+    # def get_non_leaf_node_names(self):
+    #     return self._collect_non_leaf_nodes(self.root)
+    #
+    # def _collect_leaf_nodes(self, node):
+    #     leaf_nodes = []
+    #     if node.is_leaf:
+    #         leaf_nodes.append(node.substance)  # 假设节点有一个 `name` 属性
+    #     for child in node.children:
+    #         leaf_nodes.extend(self._collect_leaf_nodes(child))
+    #     return leaf_nodes
+    #
+    # def get_leaf_node_names(self):
+    #     return self._collect_leaf_nodes(self.root)
+
+    # ======================================================================
+    #
+    # def add_nodes_edges(self, node, dot=None, simple = False):
+    #     # If it is the root node
+    #     if dot is None:
+    #         if len(node.children) == 0:
+    #             raise Exception("Empty tree!")
+    #         # dot = Digraph(comment='Substances Tree', graph_attr={'rankdir': 'LR', 'dpi': '1000'})
+    #         dot = Digraph(comment='Substances Tree', graph_attr={'rankdir': 'LR', 'dpi': '1000', 'splines': 'true'})
+    #
+    #         # lightblue2
+    #         dot.attr('node', shape='ellipse', style='filled', color='lightblue2', fontname="Arial", fontsize="8")
+    #         dot.attr('edge', color='gray', fontname="Arial", fontsize="8")
+    #         if simple:
+    #             dot.node(name=self.get_name(node), label='', width='0.1', height='0.1')
+    #         else:
+    #             dot.node(name=self.get_name(node), label=node.substance)
+    #
+    #     for child in node.children:
+    #         if simple:
+    #             dot.node(name=self.get_name(child), label='', width='0.1', height='0.1')
+    #             dot.edge(self.get_name(node), self.get_name(child), label='', arrowhead='none')
+    #         else:
+    #             dot.node(name=self.get_name(child), label=child.substance, width='0.1', height='0.1')
+    #             dot.edge(self.get_name(node), self.get_name(child), label=f"idx : {str(child.reaction_index)}", arrowhead='none')
+    #
+    #         dot = self.add_nodes_edges(child, dot=dot, simple=simple)
+    #         # reaction_info = f"reaction idx: {str(child.reaction_index)}, conditions: {self.reactions[child.reaction_index]['conditions']}"
+    #         reaction_info = str(child.reaction_index)
+    #         self.reaction_infos.add(reaction_info)
+    #     return dot
+
+    # def sanitize_name(self, name):
+    #     """
+    #     Replace hyphens and other special characters with underscores to create Graphviz-friendly identifiers.
+    #     """
+    #     # Replace hyphens and spaces with underscores
+    #     sanitized = name.replace('-', '_').replace(' ', '_').replace('(', '').replace(')', '').replace('[', '').replace(
+    #         ']', '').replace('{', '').replace('}', '').replace(',', '').replace("'", "").replace('"', '').replace('.',                                                                                                   '_')
+    #     return sanitized
+    #
+    # def get_name(self, node):
+    #     if node.reaction_index is None:
+    #         return self.sanitize_name(node.substance)  # **MODIFIED**
+    #     else:
+    #         depth = str(len(node.fathers_set))
+    #         sanitized_substance = self.sanitize_name(node.substance)  # **MODIFIED**
+    #         reaction_line = '.'.join(map(str, list(node.reaction_line)))
+    #         sanitized_reaction_line = self.sanitize_name(reaction_line)  # **MODIFIED**
+    #         return f"{depth}_{sanitized_substance}_{sanitized_reaction_line}"  # **MODIFIED**
+    #
+    # def get_name_level_order(self, node):
+    #     if node.reaction_index is None:
+    #         return self.sanitize_name(node.substance)  # **MODIFIED**
+    #     else:
+    #         depth = str(len(node.fathers_set))
+    #         sanitized_substance = self.sanitize_name(node.substance)  # **MODIFIED**
+    #         sanitized_father = self.sanitize_name(node.father.substance)  # **MODIFIED**
+    #         return f"{depth}_{sanitized_substance}_{sanitized_father}"  # **MODIFIED**
+    #
+    # def add_nodes_edges_level_order(self, node, dot=None, simple=False):
+    #     # If it is the root node
+    #     if dot is None:
+    #         if len(node.children) == 0:
+    #             raise Exception("Empty tree!")
+    #         dot = Digraph(comment='Substances Tree', graph_attr={'rankdir': 'LR'})
+    #         # dot.attr(overlap='false', ranksep='0.5', nodesep='1')
+    #         dot.attr('node', shape='ellipse', style='filled', fillcolor='#82b0d2', color='#999999', fontname="Arial", fontsize="8")
+    #         dot.attr('edge', color='#999999', fontname="Arial", fontsize="8")
+    #         root_fillcolor = '#beb8dc' # 紫色
+    #         dot.node(name=self.get_name_level_order(node), label='' if simple else node.substance, width='0.1', height='0.1', fillcolor=root_fillcolor)
+    #
+    #     queue = deque([node])
+    #     while queue:
+    #         level_nodes = []
+    #         level_edges = []
+    #         for _ in range(len(queue)):
+    #             cur_node = queue.popleft()
+    #             if cur_node.reaction_index is not None:
+    #                 edge_name = (self.get_name_level_order(cur_node.father) + self.get_name_level_order(cur_node))
+    #                 # 遍历每层节点，如果未添加则添加
+    #                 if edge_name not in level_edges:
+    #                     # label=f"idx : {str(cur_node.reaction_index)}"
+    #                     dot.edge(self.get_name_level_order(cur_node.father), self.get_name_level_order(cur_node), label=f"", arrowhead='none')
+    #                     level_edges.append(edge_name)
+    #
+    #                     reaction_info = str(cur_node.reaction_index)
+    #                     self.reaction_infos.add(reaction_info)
+    #
+    #                 # 判断当前节点是否为叶子节点
+    #                 node_name = cur_node.substance
+    #                 node_color = '#8ecfc9' if cur_node.is_leaf else '#82b0d2'  # 根据条件设定颜色
+    #                 if node_name not in level_nodes:
+    #                     dot.node(name=self.get_name_level_order(cur_node), label='' if simple else cur_node.substance, width='0.1', height='0.1', fillcolor=node_color)
+    #                     level_nodes.append(node_name)
+    #
+    #             for child in cur_node.children:
+    #                 queue.append(child)
+    #     return dot
+    #
+    #
+    # def show_tree(self, view=False, simple=False, dpi='500', img_suffix = ''):
+    #     dot = self.add_nodes_edges_level_order(self.root, simple=simple)
+    #     dot.attr(dpi=dpi)
+    #     dot.render(filename=str(self.target_substance) + img_suffix, format='png', view=view)
+
+    # ======================================================================
 
 
 class TreeLoader():

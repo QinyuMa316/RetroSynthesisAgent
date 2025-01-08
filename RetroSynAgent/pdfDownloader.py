@@ -12,11 +12,12 @@ from dotenv import load_dotenv
 import os
 
 class PDFDownloader:
-    def __init__(self, material, pdf_folder_name ,num_results = 5, n_thread=3):
+    def __init__(self, material, pdf_folder_name, num_results = 5, n_thread=3):
         self.pdf_folder_name = pdf_folder_name
         self.no_download_link_json_name = 'no_download_link_titles.json'
         self.query = material + ' AND synthesis'
         self.title_list = self.get_scholar_titles(self.query, num_results)
+        # self.title_list = self.get_scholar_dois(self.query, num_results)
         self.n_thread = n_thread
         self.url = 'https://www.sci-hub.se/'
         self.no_download_link_titles = self.read_data_from_json(self.no_download_link_json_name) if os.path.exists(
@@ -39,10 +40,8 @@ class PDFDownloader:
                 if pub['num_citations'] > citations:
                     title = pub['bib']['title']
                     num_citations = int(pub['num_citations'])
-                    # if not 'negative' in title:
                     title_list.append(title)
                     count += 1
-                    # print(f'{count}: {title}: {num_citations}')
                     if count == num_results:
                         break
             except StopIteration:
@@ -59,12 +58,28 @@ class PDFDownloader:
 
     def save_data_as_json(self, filename, data):
         with open(filename, 'w') as json_file:
-            json.dump(data, json_file, indent=4)
+            json.dump(data, json_file, indent=4, ensure_ascii=False)
         # print(f'{filename} saved!')
 
+    # def get_pdf_files(self):
+    #     pdf_files = glob.glob(os.path.join(self.pdf_folder_name, '*.pdf'))
+    #     return [os.path.basename(file) for file in pdf_files]
+
     def get_pdf_files(self):
-        pdf_files = glob.glob(os.path.join(self.pdf_folder_name, '*.pdf'))
-        return [os.path.basename(file) for file in pdf_files]
+        # get pdf path list (pdf/pdf_sub/title.pdf)
+        # pdf_files = []
+        # for root, dirs, files in os.walk(self.pdf_folder_name):
+        #     for file in files:
+        #         if file.endswith(".pdf"):
+        #             pdf_files.append(os.path.join(root, file))
+        # return pdf_files
+        # get pdf name list (title.pdf)
+        pdf_files = []
+        for root, dirs, files in os.walk(self.pdf_folder_name):
+            for file in files:
+                if file.endswith(".pdf"):
+                    pdf_files.append(file)  # 只获取文件名
+        return pdf_files
 
     def check_pdf_existence(self, target_pdf_name, pdf_name_list):
         similarity_threshold = 0.9
@@ -142,6 +157,8 @@ class PDFDownloader:
 
     def main(self):
         os.makedirs(self.pdf_folder_name, exist_ok=True)
+        # joined_titles = '\n'.join(self.title_list)
+        # print(f"titleList for {self.query}:\n {joined_titles}")
         titles_filtered = self.filter_titles(self.title_list)
 
         # print(f'Total number of titles: {len(self.title_list)}, '
@@ -149,16 +166,12 @@ class PDFDownloader:
         #       f'{len(self.no_download_link_titles)} do not have download links, '
         #       f'{len(titles_filtered)} are planned to be downloaded.')
 
-        random.shuffle(titles_filtered)
+        # random.shuffle(titles_filtered)
         self.download_pdfs(titles_filtered)
-
 
         download_pdf_filename_list = self.get_pdf_files()
         # print(f'finished downloading, '
         #       f'{len(download_pdf_filename_list)} have been downloaded, '
         #       f'{len(self.no_download_link_titles)} do not have download links, '
         #       f'{len(self.title_list)-len(self.get_pdf_files())-len(self.no_download_link_titles)} failed to be downloaded.')
-        # version2
         return download_pdf_filename_list
-
-
