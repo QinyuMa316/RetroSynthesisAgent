@@ -123,7 +123,8 @@ material = 'Polyimide'
 
 tree_loader = TreeLoader()
 
-tree_folder = 'tree_pi/0108-alg2-final'
+# tree_folder = 'tree_pi/0108-alg2-final'
+tree_folder = 'tree_pi'
 # main_tree
 tree_main_filename = f'{tree_folder}/{material}_w_exp_alg.pkl'
 # sub_tree_1_purple

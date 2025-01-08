@@ -62,7 +62,7 @@ async function fetchAndRenderFive() {
 // document.addEventListener("DOMContentLoaded", fetchAndRenderThree);
 
 // This is for rendering four trees
-document.addEventListener("DOMContentLoaded", fetchAndRenderQuad);
+// document.addEventListener("DOMContentLoaded", fetchAndRenderQuad);
 
 // This is for rendering five trees
 // document.addEventListener("DOMContentLoaded", fetchAndRenderFive);
