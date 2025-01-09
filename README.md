@@ -17,10 +17,12 @@ Download it and turn it to a set as a format of json
 ## `env.` File Setting
 + Set your OpenAI API key (`API_KEY`) and optional `BASE_URL` to use the LLM.
 + Set the `HEADERS` and `COOKIES` from your browser for web scraping of literatures in JSON
-  + an example:
-  + ```
++ an example:
+```
+API_KEY=xxx
+BASE_URL=xxx
 HEADERS={"user-agent": "xxx"}
-COOKIES={"xxx": "xxx", }
+COOKIES={"xxx": "xxx", "xxx": "xxx"}
 ```
 
 ## Run the demo

@@ -21,7 +21,10 @@ class GPTAPI:
         self.api_key = os.getenv('API_KEY')
         self.base_url = os.getenv('BASE_URL')
         # Initialize OpenAI client
-        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        if self.base_url:
+            self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        else:
+            self.client = OpenAI(api_key=self.api_key)
         self.model = model
         self.temperature = temperature
 
