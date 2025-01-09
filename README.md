@@ -11,8 +11,8 @@ pip install rdkit requests python-dotenv PyMuPDF scholarly openai networkx graph
 ```
 
 ## Data
-eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
-Download it and turn it to a set as a format of json
++ eMolecules download URL: https://downloads.emolecules.com/free/2024-07-01/
++ Download it and turn it to a set as a format of json
 
 ## `env.` File Setting
 + Set your OpenAI API key (`API_KEY`) and optional `BASE_URL` to use the LLM.
