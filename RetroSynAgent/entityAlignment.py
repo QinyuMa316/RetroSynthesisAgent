@@ -25,7 +25,7 @@ class EntityAlignment:
                 llm = GPTAPI()
                 reactions_txt_modified = llm.answer_wo_vision(prompt).replace("′","'")
                 results_dict_modified[key] = reactions_txt_modified
-                print(f'\n=== origin txt:{reactions_txt}\n=== modified txt:\n{reactions_txt_modified}')
+                # print(f'\n=== origin txt:{reactions_txt}\n=== modified txt:\n{reactions_txt_modified}')
         else:
             with open(modified_results_filepath, 'r') as file:
                 results_dict_modified = json.load(file)
@@ -40,7 +40,7 @@ class EntityAlignment:
                             llm = GPTAPI()
                             reactions_txt_modified = llm.answer_wo_vision(prompt).replace("′", "'")
                             results_dict_modified[key] = reactions_txt_modified
-                            print(f'\n=== origin txt:{reactions_txt}\n=== modified txt:\n{reactions_txt_modified}')
+                            # print(f'\n=== origin txt:{reactions_txt}\n=== modified txt:\n{reactions_txt_modified}')
                         # else:
         with open(result_folder_name + '/' + result_json_name + '_modified.json', 'w') as file:
             json.dump(results_dict_modified, file, indent=4, ensure_ascii=False)

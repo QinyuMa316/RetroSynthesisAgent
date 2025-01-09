@@ -5,6 +5,8 @@ This project aims to conduct retrosynthesis planning for polymer materials based
 
 ## Requirements
 ```
+conda create -n retrosyn python=3.11
+conda activate retrosyn
 pip install rdkit requests python-dotenv PyMuPDF scholarly openai networkx graphviz pubchempy Pillow fastapi pydantic uvicorn pyvis loguru
 ```
 
@@ -29,3 +31,6 @@ Parameter Description:
 We provide a demo video of its automated operation process:
 
 [![Watch Demo](assets/thumbnail.png)](assets/demo-video.mp4)
+
+After constructing the chemical retrosynthesis pathway tree for the target substance, a URL will be generated. You can open it directly in your local browser.
+When you hover over a node in the tree, the name of the substance represented by that node will be displayed.
