@@ -26,7 +26,9 @@ COOKIES={"xxx": "xxx", "xxx": "xxx"}
 ```
 
 ## Run the demo
-`sh runRetroSynAgent.sh`
+```
+sh runRetroSynAgent.sh
+```
 
 Parameter Description:
 + `--material`: Specifies the material to be processed.
