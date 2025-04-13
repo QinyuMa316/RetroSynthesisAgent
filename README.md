@@ -1,5 +1,16 @@
 # RetroSynthesisAgent
 This project aims to conduct retrosynthesis planning for polymer materials based on literature, utilizing an LLM agent and knowledge graphs.
+Please cite the following article:
+```
+@article{ma2025automated,
+  title={Automated Retrosynthesis Planning of Macromolecules Using Large Language Models and Knowledge Graphs},
+  author={Ma, Qinyu and Zhou, Yuhao and Li, Jianfeng},
+  journal={Macromolecular Rapid Communications},
+  pages={2500065},
+  year={2025},
+  publisher={Wiley Online Library}
+}
+```
 
 ## Requirements
 ```
